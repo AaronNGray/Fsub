@@ -1,8 +1,11 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:40:11 PDT 1998 by heydon     *)
 
 MODULE Scope;
-IMPORT Err, Out, Fmt, Formatter, Scanner, Tree;
+IMPORT Err, Out, Formatter, Scanner, Tree;
 
 REVEAL
 
@@ -45,12 +48,12 @@ PROCEDURE ScopeError(msg: TEXT; location: Err.Location) RAISES ANY =
    END ScopeError;
 
 
-PROCEDURE Length(env: Env): INTEGER RAISES ANY =
+PROCEDURE Length(env: Env): INTEGER =
   VAR len: INTEGER;
   BEGIN
     len := 0;
     LOOP
-      TYPECASE env OF
+      TYPECASE env OF <*NOWARN*>
       | NULL => 
 	 RETURN len;
       | TypeDefEnv(node) =>
@@ -75,7 +78,7 @@ PROCEDURE SetAbsoluteIndex(name: Tree.IdeName; env: Env) RAISES ANY =
     END;
     *)
     LOOP
-      TYPECASE env OF
+      TYPECASE env OF <*NOWARN*>
       | NULL => 
 	  ScopeError(
 	    "Free variable in action must be bound at the top level: " & 
@@ -120,7 +123,7 @@ PROCEDURE LookupTermIde((*mod*)name: Tree.IdeName;
   BEGIN
     index := 1;
     LOOP
-      TYPECASE env OF
+      TYPECASE env OF <*NOWARN*>
       | NULL => 
 	  ScopeError(
 	    "Unbound term identifier: " & Tree.FmtIdeName(name, NIL),
@@ -160,7 +163,7 @@ PROCEDURE LookupTypeIde((*mod*)ide: Tree.TypeIde;
   BEGIN
     index := 1;
     LOOP
-      TYPECASE env OF
+      TYPECASE env OF <*NOWARN*>
       | NULL => 
 	  ScopeError(
 	    "Unbound type identifier: " & Tree.FmtIdeName(ide.name, NIL),
@@ -216,7 +219,6 @@ PROCEDURE ScopeTypeBinding(binding: Tree.TypeBinding; env: Env)
 
 PROCEDURE ScopeTermBinding(binding: Tree.TermBinding; env: Env)
     : Env RAISES ANY =
-  VAR type: Tree.Type;
   BEGIN
     TYPECASE binding OF
     | NULL => RETURN env;
@@ -255,7 +257,8 @@ PROCEDURE ScopeType(type: Tree.Type; env: Env): Tree.Type RAISES ANY =
     | Tree.TypePatternPosition, Tree.TypePatternForall =>
 	ScopeError("Pattern positions (_n) not allowed here",
 	  type.location);
-    ELSE Err.Fault(Out.out, "ScopeType");
+    ELSE
+      <*NOWARN*> Err.Fault(Out.out, "ScopeType");
     END;
   END ScopeType;
 
@@ -265,7 +268,7 @@ PROCEDURE ScopeTerm(term: Tree.Term; env: Env) RAISES ANY =
     | NULL => Err.Fault(Out.out, "ScopeTerm NIL");
     | Tree.TermIde(node) =>
 	node.index := LookupTermIde((*mod*)node.name, term.location, env);
-    | Tree.TermTop(node) =>
+    | Tree.TermTop =>
     | Tree.TermFun(node) =>
 	node.bound := ScopeType(node.bound, env);
 	ScopeTerm(node.body,
@@ -298,7 +301,7 @@ PROCEDURE ScopeTerm(term: Tree.Term; env: Env) RAISES ANY =
 
   PROCEDURE ScopeContext(context: Tree.Context; env: Env): Env RAISES ANY =
     BEGIN
-      TYPECASE context OF
+      TYPECASE context OF <*NOWARN*>
       | NULL => RETURN env;
       | Tree.ContextType(node) =>
 	  node.bound:=
@@ -313,7 +316,7 @@ PROCEDURE ScopeTerm(term: Tree.Term; env: Env) RAISES ANY =
       END;
     END ScopeContext;
 
-PROCEDURE Setup() RAISES ANY =
+PROCEDURE Setup() =
   BEGIN
     topEnv := NIL;
   END Setup;

@@ -1,5 +1,8 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:38:05 PDT 1998 by heydon     *)
 
 MODULE Command;
 IMPORT Text, Out, Formatter;
@@ -12,12 +15,12 @@ TYPE
 
   VAR list: List;
 
-  PROCEDURE Setup() RAISES ANY =
+  PROCEDURE Setup() =
     BEGIN
       list:=NIL;
     END Setup;
 
-  PROCEDURE Insert(command: T; list: List): List RAISES ANY =
+  PROCEDURE Insert(command: T; list: List): List =
     BEGIN
       IF list=NIL THEN 
 	RETURN NEW(List, first:=command, rest:=list);
@@ -29,7 +32,7 @@ TYPE
       END;
   END Insert;
 
-  PROCEDURE Register(command: T) RAISES ANY =
+  PROCEDURE Register(command: T) =
     BEGIN
       list:=Insert(command, list);
     END Register;

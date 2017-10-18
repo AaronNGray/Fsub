@@ -1,13 +1,16 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sun Aug 16 12:12:32 PDT 1998 by heydon     *)
 
 MODULE Scanner;
-IMPORT KeyTable, Text, String, Wr, Rd, Stdio, Out, Err, FileStream, 
-  Fmt, Formatter;
+IMPORT TextRefTbl, Text, String, Wr, Rd, Stdio, Out, Err, FileRd, 
+  Fmt, Formatter, OSError;
 
 REVEAL
   Keyword =  BRANDED OBJECT name: TEXT; keyword: BOOLEAN END;
-  KeywordSet = BRANDED OBJECT table: KeyTable.T END;
+  KeywordSet = BRANDED OBJECT table: TextRefTbl.T END;
 
 TYPE
   Symbol = Keyword;
@@ -49,45 +52,41 @@ VAR
   firstPrompt, nextPrompt: TEXT;
   isFirstPrompt: BOOLEAN;
 
-PROCEDURE NewKeywordSet(): KeywordSet RAISES ANY =
+PROCEDURE NewKeywordSet(): KeywordSet =
   BEGIN
-    RETURN NEW(KeywordSet, table:=KeyTable.New());
+    RETURN NEW(KeywordSet, table:=NEW(TextRefTbl.Default).init());
   END NewKeywordSet;
 
-PROCEDURE CopyKeywordSet(keywordSet: KeywordSet): KeywordSet RAISES ANY =
-  VAR newKeySet: KeywordSet; key: TEXT; value: REFANY;
+PROCEDURE CopyKeywordSet(keywordSet: KeywordSet): KeywordSet =
+  VAR
+    key: TEXT; value: REFANY;
+    iter := keywordSet.table.iterate();
+    newKeySet := NEW(KeywordSet, table:=NEW(TextRefTbl.Default).init());
   BEGIN
-    newKeySet := NEW(KeywordSet, table:=KeyTable.New());
-    EVAL keywordSet.table.enumerate(EnumKeySet, newKeySet, 
-		(*out*) key, (*out*) value);
+    WHILE iter.next((*OUT*) key, (*OUT*) value) DO
+      VAR symbol := NARROW(value, Symbol); BEGIN
+        IF symbol.keyword THEN
+          EVAL newKeySet.table.put(key, symbol);
+        END
+      END
+    END;
     RETURN newKeySet;
   END CopyKeywordSet;
 
-PROCEDURE EnumKeySet(data: REFANY; key: TEXT; VAR value: REFANY): BOOLEAN RAISES ANY =
-  VAR symbol: Symbol; newKeySet: KeywordSet;
-  BEGIN
-    symbol := NARROW(value, Symbol);
-    IF symbol.keyword THEN
-      newKeySet := NARROW(data, KeywordSet);
-      EVAL newKeySet.table.put(key, symbol);
-    END;
-    RETURN FALSE;
-  END EnumKeySet;
-
-PROCEDURE GetKeywordSet(): KeywordSet RAISES ANY =
+PROCEDURE GetKeywordSet(): KeywordSet =
   BEGIN
     RETURN keySet;
   END GetKeywordSet;
 
-PROCEDURE UseKeywordSet(keywordSet: KeywordSet) RAISES ANY =
+PROCEDURE UseKeywordSet(keywordSet: KeywordSet) =
   BEGIN
     keySet := keywordSet;
   END UseKeywordSet;
 
-PROCEDURE BeKeyword(ide: TEXT; keywordSet: KeywordSet): Keyword RAISES ANY =
+PROCEDURE BeKeyword(ide: TEXT; keywordSet: KeywordSet): Keyword =
   VAR value: REFANY; symbol: Symbol;
   BEGIN
-    IF keywordSet.table.in(ide, (*VAR OUT*) value) THEN
+    IF keywordSet.table.get(ide, (*OUT*) value) THEN
       symbol := NARROW(value, Symbol);
       symbol.keyword := TRUE;
     ELSE
@@ -97,17 +96,17 @@ PROCEDURE BeKeyword(ide: TEXT; keywordSet: KeywordSet): Keyword RAISES ANY =
     RETURN symbol;
   END BeKeyword;
 
-PROCEDURE GetKeyword(ide: TEXT; keywordSet: KeywordSet): Keyword RAISES ANY =
+PROCEDURE GetKeyword(ide: TEXT; keywordSet: KeywordSet): Keyword =
   VAR value: REFANY; symbol: Symbol;
   BEGIN
-    IF keywordSet.table.in(ide, (*VAR OUT*) value) THEN
+    IF keywordSet.table.get(ide, (*OUT*) value) THEN
       symbol := NARROW(value, Symbol);
       IF symbol.keyword THEN RETURN symbol ELSE RETURN NIL END;
     ELSE RETURN NIL;
     END;
   END GetKeyword;
 
-PROCEDURE IsDelimiter(char: CHAR): BOOLEAN RAISES ANY =
+PROCEDURE IsDelimiter(char: CHAR): BOOLEAN =
   BEGIN
     RETURN charTable[char] = CharacterClass.DelimCharCase;
   END IsDelimiter;
@@ -134,7 +133,7 @@ PROCEDURE IsIdentifier(string: String.T): BOOLEAN RAISES ANY =
     END;
   END IsIdentifier;
 
-PROCEDURE NewInput(fileName: TEXT; rd: Rd.T; rest: InputList): InputList RAISES ANY =
+PROCEDURE NewInput(fileName: TEXT; rd: Rd.T; rest: InputList): InputList =
   VAR res: InputList;
   BEGIN
     res := NEW(InputList);
@@ -166,7 +165,7 @@ PROCEDURE EnqueueInput(fileName: TEXT) RAISES ANY =
     END;
   END EnqueueInput;
 
-PROCEDURE PushInput(fileName: TEXT; rd: Rd.T) RAISES ANY =
+PROCEDURE PushInput(fileName: TEXT; rd: Rd.T) =
   BEGIN input := NewInput(fileName, rd, input); END PushInput;
 
 PROCEDURE PopInput() RAISES ANY =
@@ -181,15 +180,14 @@ PROCEDURE OpenInput() RAISES ANY =
   BEGIN
     IF input^.rd = NIL THEN
       TRY
-        input^.rd :=
-          FileStream.OpenRead(input^.fileName);
+        input^.rd := FileRd.Open(input^.fileName);
       EXCEPT
-      ELSE Err.Fault(Out.out, "File not found: " & input^.fileName);
+      | OSError.E => Err.Fault(Out.out, "File not found: " & input^.fileName);
       END;
     END;
   END OpenInput;
 
-PROCEDURE CurrentLocationInfo(VAR(*out*) info: Err.LocationInfo) RAISES ANY =
+PROCEDURE CurrentLocationInfo(VAR(*out*) info: Err.LocationInfo) =
   BEGIN
     info.fileName:=input^.fileName;
     info.char := input^.acceptedCharPos;
@@ -222,7 +220,7 @@ PROCEDURE LineLocation(VAR (*out*) fileName: TEXT;
   END LineLocation;
 -- *)
 
-PROCEDURE SetCharNo(charNo, lineNo, lineCharNo: INTEGER) RAISES ANY =
+PROCEDURE SetCharNo(charNo, lineNo, lineCharNo: INTEGER) =
   BEGIN
     input^.acceptedCharPos := charNo;
     input^.acceptedLinePos := lineNo;
@@ -644,12 +642,10 @@ PROCEDURE GetTokenIde(VAR (*ou*) ide: TEXT): BOOLEAN RAISES ANY =
     class := LookToken();
     IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
       IF scanBufferSize # 0 THEN
-	IF keySet.table.inChars(SUBARRAY(scanBuffer^, 0, scanBufferSize),
-		 (*VAR OUT*) value)
-	THEN
+        name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
+	IF keySet.table.get(name, (*OUT*) value) THEN
 	  tokenSym := NARROW(value, Symbol);
 	ELSE
-	  name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
 	  tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
 	  EVAL keySet.table.put(name, tokenSym);
 	END;
@@ -669,12 +665,10 @@ PROCEDURE GetTokenName(VAR (*ou*) text: TEXT): BOOLEAN RAISES ANY =
     class := LookToken();
     IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
       IF scanBufferSize # 0 THEN
-	IF keySet.table.inChars(SUBARRAY(scanBuffer^, 0, scanBufferSize),
-		 (*VAR OUT*) value)
-	THEN
+        name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
+	IF keySet.table.get(name, (*OUT*) value) THEN
 	  tokenSym := NARROW(value, Symbol);
 	ELSE
-	  name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
 	  tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
 	  EVAL keySet.table.put(name, tokenSym);
 	END;
@@ -693,12 +687,10 @@ PROCEDURE HaveTokenIde(ide: TEXT): BOOLEAN RAISES ANY =
     class := LookToken();
     IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
       IF scanBufferSize # 0 THEN
-	IF keySet.table.inChars(SUBARRAY(scanBuffer^, 0, scanBufferSize),
-		 (*VAR OUT*) value)
-	THEN
+        name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
+	IF keySet.table.get(name, (*OUT*) value) THEN
 	  tokenSym := NARROW(value, Symbol);
 	ELSE
-	  name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
 	  tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
 	  EVAL keySet.table.put(name, tokenSym);
 	END;
@@ -718,12 +710,10 @@ PROCEDURE HaveTokenName(text: TEXT): BOOLEAN RAISES ANY =
     class := LookToken();
     IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
       IF scanBufferSize # 0 THEN
-	IF keySet.table.inChars(SUBARRAY(scanBuffer^, 0, scanBufferSize),
-		 (*VAR OUT*) value)
-	THEN
+        name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
+	IF keySet.table.get(name, (*OUT*) value) THEN
 	  tokenSym := NARROW(value, Symbol);
 	ELSE
-	  name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
 	  tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
 	  EVAL keySet.table.put(name, tokenSym);
 	END;
@@ -743,12 +733,10 @@ PROCEDURE HaveTokenKey(key: Keyword): BOOLEAN RAISES ANY =
     class := LookToken();
     IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
       IF scanBufferSize # 0 THEN
-	IF keySet.table.inChars(SUBARRAY(scanBuffer^, 0, scanBufferSize),
-		 (*VAR OUT*) value)
-	THEN
+        name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
+	IF keySet.table.get(name, (*OUT*) value) THEN
 	  tokenSym := NARROW(value, Symbol);
 	ELSE
-	  name := Text.FromChars(SUBARRAY(scanBuffer^, 0, scanBufferSize));
 	  tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
 	  EVAL keySet.table.put(name, tokenSym);
 	END;
@@ -771,25 +759,25 @@ PROCEDURE HaveTokenDelim(delim: CHAR): BOOLEAN RAISES ANY =
     END;
   END HaveTokenDelim;
 
-PROCEDURE SetChar(n: CHAR; class: CharacterClass) RAISES ANY =
+PROCEDURE SetChar(n: CHAR; class: CharacterClass) =
   BEGIN charTable[n] := class; END SetChar;
 
-PROCEDURE SetRange(n: CHAR; m: CHAR; class: CharacterClass) RAISES ANY =
+PROCEDURE SetRange(n: CHAR; m: CHAR; class: CharacterClass) =
   BEGIN
     FOR i := ORD(n) TO ORD(m) DO charTable[VAL(i, CHAR)] := class; END;
   END SetRange;
 
-PROCEDURE TopLevel(): BOOLEAN RAISES ANY =
+PROCEDURE TopLevel(): BOOLEAN =
   BEGIN RETURN Text.Empty(input^.fileName); END TopLevel;
 
-PROCEDURE SetPrompt(newFirstPrompt, newNextPrompt: TEXT) RAISES ANY =
+PROCEDURE SetPrompt(newFirstPrompt, newNextPrompt: TEXT) =
   BEGIN
     firstPrompt := newFirstPrompt;
     nextPrompt := newNextPrompt;
     isFirstPrompt := TRUE;
   END SetPrompt;
 
-PROCEDURE FirstPrompt() RAISES ANY = BEGIN isFirstPrompt := TRUE; END FirstPrompt;
+PROCEDURE FirstPrompt() = BEGIN isFirstPrompt := TRUE; END FirstPrompt;
 
 PROCEDURE Clear() RAISES ANY=
   VAR ch: CHAR; class: TokenClass;

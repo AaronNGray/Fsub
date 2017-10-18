@@ -1,35 +1,38 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sun Aug 16 12:02:08 PDT 1998 by heydon     *)
 
 MODULE Parse;
-IMPORT Text, String, Out, Fmt, Formatter, Err, Scanner, KeyTable;
+IMPORT TextRefTbl, String, Out, Fmt, Formatter, Err, Scanner;
 
 REVEAL 
   GrammarEnvRoot = 
     BRANDED "GrammarEnvRoot" OBJECT
-      table: KeyTable.T;
+      table: TextRefTbl.T;
     END;
 
 VAR failedName: TEXT;
 
-PROCEDURE Setup() RAISES ANY =
+PROCEDURE Setup() =
   BEGIN 
     failedName:="";
   END Setup;
 
 (* Default methods returning NIL *)
-PROCEDURE BuildNoAction(self: ActionBase; base: INTEGER; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoAction;
-PROCEDURE BuildNoEnvCapture(self: EnvCapture; base: INTEGER; env: GrammarEnv; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoEnvCapture;
-PROCEDURE BuildNoGivenKeyword(self: GivenKeywordBase; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoGivenKeyword;
-PROCEDURE BuildNoGivenIdentifier(self: GivenIdentifier; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoGivenIdentifier;
-PROCEDURE BuildNoGivenName(self: GivenName; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoGivenName;
-PROCEDURE BuildNoGivenDelimiter(self: GivenDelimiter; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoGivenDelimiter;
-PROCEDURE BuildNoIdentifier(self: Identifier; name: TEXT; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoIdentifier;
-PROCEDURE BuildNoName(self: Name; name: TEXT; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoName;
-PROCEDURE BuildNoQuotedChar(self: QuotedChar; char: CHAR; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoQuotedChar;
-PROCEDURE BuildNoInteger(self: Integer; int: INTEGER; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoInteger;
-PROCEDURE BuildNoReal(self: Real; real: REAL; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoReal;
-PROCEDURE BuildNoQuotedString(self: QuotedString; string: String.T; READONLY info: Err.LocationInfo): Tree RAISES ANY = BEGIN RETURN NIL END BuildNoQuotedString;
+PROCEDURE BuildNoAction(<*UNUSED*> self: ActionBase; <*UNUSED*> base: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoAction;
+PROCEDURE BuildNoEnvCapture(<*UNUSED*> self: EnvCapture; <*UNUSED*> base: INTEGER; <*UNUSED*> env: GrammarEnv; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoEnvCapture;
+PROCEDURE BuildNoGivenKeyword(<*UNUSED*> self: GivenKeywordBase; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoGivenKeyword;
+PROCEDURE BuildNoGivenIdentifier(<*UNUSED*> self: GivenIdentifier; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoGivenIdentifier;
+PROCEDURE BuildNoGivenName(<*UNUSED*> self: GivenName; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoGivenName;
+PROCEDURE BuildNoGivenDelimiter(<*UNUSED*> self: GivenDelimiter; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoGivenDelimiter;
+PROCEDURE BuildNoIdentifier(<*UNUSED*> self: Identifier; <*UNUSED*> name: TEXT; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoIdentifier;
+PROCEDURE BuildNoName(<*UNUSED*> self: Name; <*UNUSED*> name: TEXT; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoName;
+PROCEDURE BuildNoQuotedChar(<*UNUSED*> self: QuotedChar; <*UNUSED*> char: CHAR; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoQuotedChar;
+PROCEDURE BuildNoInteger(<*UNUSED*> self: Integer; <*UNUSED*> int: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoInteger;
+PROCEDURE BuildNoReal(<*UNUSED*> self: Real; <*UNUSED*> real: REAL; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoReal;
+PROCEDURE BuildNoQuotedString(<*UNUSED*> self: QuotedString; <*UNUSED*> string: String.T; <*UNUSED*> READONLY info: Err.LocationInfo): Tree = BEGIN RETURN NIL END BuildNoQuotedString;
 
   PROCEDURE Read(gram: Grammar; env: GrammarEnv; base: INTEGER:=0)
       : Tree RAISES ANY =
@@ -46,8 +49,7 @@ PROCEDURE BuildNoQuotedString(self: QuotedString; string: String.T; READONLY inf
   (* To be called when Read fails to reset the parse state without
      giving an error message. Set stackLevel=base+max, for the base given
      to, and the max returned by, Read. *)
-  PROCEDURE Reset(stackLevel: INTEGER) RAISES ANY =
-    VAR  i: INTEGER;
+  PROCEDURE Reset(stackLevel: INTEGER) =
     BEGIN
       FOR i:=0 TO stackLevel DO Stack[i]:=NIL END;
     END Reset;
@@ -55,7 +57,7 @@ PROCEDURE BuildNoQuotedString(self: QuotedString; string: String.T; READONLY inf
   (* To be called when Read fails, to give an error message. 
      Should be followed by Scanner.Syntax(). *)
   PROCEDURE Error(failed: Grammar) RAISES ANY =
-    VAR info: Err.LocationInfo; i: INTEGER;
+    VAR info: Err.LocationInfo;
     BEGIN
       Scanner.CurrentLocationInfo((*out*)info);
       Formatter.PutText(Out.out, "Parsing "&failedName&" "); 
@@ -64,9 +66,9 @@ PROCEDURE BuildNoQuotedString(self: QuotedString; string: String.T; READONLY inf
       Formatter.Flush(Out.out);
     END Error;
 
-PROCEDURE NewEnv(): GrammarEnv RAISES ANY =
+PROCEDURE NewEnv(): GrammarEnv =
   BEGIN
-    RETURN NEW(GrammarEnv, table:=KeyTable.New(),
+    RETURN NEW(GrammarEnv, table:=NEW(TextRefTbl.Default).init(),
 	Lookup:=Lookup, Add:=Add, UndoAdd:=UndoAdd,
 	Extend:=Extend, UndoExtend:=UndoExtend,
 	ExtendIter:=ExtendIter, UndoExtendIter:=UndoExtendIter);
@@ -75,7 +77,7 @@ PROCEDURE NewEnv(): GrammarEnv RAISES ANY =
 PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8, 
     item9, item10, item11, item12, item13, item14, item15, item16,
     item17, item18, item19, item20: Grammar:=NIL; 
-  rest: GrammarList:=NIL): GrammarList RAISES ANY =
+  rest: GrammarList:=NIL): GrammarList =
   VAR list: GrammarList;
   BEGIN
     list:=rest;
@@ -102,18 +104,16 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
     RETURN list;
   END List;
 
-  PROCEDURE Store(position: INTEGER; grammar: Grammar): Grammar RAISES ANY =
+  PROCEDURE Store(position: INTEGER; grammar: Grammar): Grammar =
   BEGIN
     RETURN NEW(Storage, item:=grammar, position:=position);
   END Store;
 
   PROCEDURE Lookup(env: GrammarEnv; name: TEXT): Grammar RAISES ANY =
-  VAR gram: Grammar;
-  BEGIN
-    TRY gram := NARROW(env.table.get(name), Grammar)
-    EXCEPT
-    | KeyTable.NotFound => 
-	Scanner.Syntax("Unbound non-terminal: "&name);
+  VAR ref: REFANY; gram: Grammar; BEGIN
+    IF env.table.get(name, (*OUT*) ref)
+      THEN gram := NARROW(ref, Grammar)
+      ELSE Scanner.Syntax("Unbound non-terminal: "&name);
     END;
     RETURN gram;
   END Lookup;
@@ -121,7 +121,7 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
   PROCEDURE Add(env: GrammarEnv; name: TEXT; grammar: Grammar) RAISES ANY =
   VAR value: REFANY;
   BEGIN
-    IF env.table.in(name, (*VAR OUT*) value) THEN 
+    IF env.table.get(name, (*OUT*) value) THEN 
 	Scanner.Syntax("Duplicated non-terminal: "&name);
     END;
     EVAL env.table.put(name, grammar);
@@ -130,15 +130,15 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
   PROCEDURE UndoAdd(env: GrammarEnv; name: TEXT) RAISES ANY =
   VAR value: REFANY;
   BEGIN
-    IF NOT env.table.delete(name, (*VAR OUT*) value) THEN
+    IF NOT env.table.delete(name, (*OUT*) value) THEN
       Scanner.Error("GrammarEnv.UndoAdd: could not find: "&name) 
     END;
   END UndoAdd;
 
   PROCEDURE Extend(env: GrammarEnv; name: TEXT; grammar: Grammar) RAISES ANY =
-  VAR value, oldValue: REFANY;
+  VAR value: REFANY;
   BEGIN
-    IF NOT env.table.in(name, (*out*) value) THEN 
+    IF NOT env.table.get(name, (*OUT*) value) THEN 
       Scanner.Syntax("Could not find non-terminal to extend: "&name);
     END;
     TYPECASE grammar OF
@@ -168,7 +168,7 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
     RAISES ANY =
   VAR value: REFANY;
   BEGIN
-    IF NOT env.table.in(name, (*out*)value) THEN 
+    IF NOT env.table.get(name, (*OUT*) value) THEN 
       Scanner.Error("GrammarEnv.UndoExtend: could not find: "&name) 
     END;
     TYPECASE grammar OF
@@ -190,7 +190,7 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
     RAISES ANY =
   VAR value: REFANY;
   BEGIN
-    IF NOT env.table.in(name, (*VAR OUT*) value) THEN 
+    IF NOT env.table.get(name, (*OUT*) value) THEN 
       Scanner.Syntax("Could not find non-terminal to extend: "&name);
     END;
     TYPECASE value OF
@@ -212,7 +212,7 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
     RAISES ANY =
   VAR value: REFANY;
   BEGIN
-    IF NOT env.table.in(name, (*VAR OUT*)value) THEN 
+    IF NOT env.table.get(name, (*OUT*) value) THEN 
       Scanner.Error("GrammarEnv.UndoExtendIter: could not find: "&name) 
     END;
     TYPECASE value OF
@@ -261,10 +261,10 @@ PROCEDURE List(item1,item2,item3,item4,item5,item6,item7,item8,
   VAR tree: Tree;
       ide, text: TEXT; char: CHAR; int: INTEGER; real: REAL; string: String.T;
       list: GrammarList; scanPoint: INTEGER;
-      i: INTEGER; locInfo: Err.LocationInfo;
+      locInfo: Err.LocationInfo;
       saveBase, saveMax: INTEGER;
   BEGIN
-    TYPECASE gram OF
+    TYPECASE gram OF <*NOWARN*>
     | NonTerminal(node) =>
 	saveBase := base; saveMax := max;
 	INC(base,max);

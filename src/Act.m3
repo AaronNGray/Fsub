@@ -1,9 +1,11 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:42:42 PDT 1998 by heydon     *)
 
 MODULE Act;
-IMPORT Formatter, Text, String, Out, Err, Fmt, Scan, Gram, Parse, Tree, 
-  Command, Scope;
+IMPORT Formatter, Text, String, Out, Err, Fmt, Parse, Tree, Command, Scope;
 
   TYPE
     Env =
@@ -12,49 +14,53 @@ IMPORT Formatter, Text, String, Out, Err, Fmt, Scan, Gram, Parse, Tree,
         rest: Env;
       END;
 
-  PROCEDURE DefaultTree(location: Err.Location): Parse.Tree RAISES ANY =
+  PROCEDURE DefaultTree(location: Err.Location): Parse.Tree =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=location);
     END DefaultTree;
 
-  PROCEDURE BuildActionIdentifier(self: Parse.Identifier; name: TEXT;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildActionIdentifier(<*UNUSED*> self: Parse.Identifier;
+      <*UNUSED*> name: TEXT; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionIdentifier;
 
-  PROCEDURE BuildActionDelimiter(self: Parse.GivenDelimiter;
+  PROCEDURE BuildActionDelimiter(<*UNUSED*> self: Parse.GivenDelimiter;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionDelimiter;
 
-  PROCEDURE BuildActionKeyword(self: Parse.GivenKeyword;
+  PROCEDURE BuildActionKeyword(<*UNUSED*> self: Parse.GivenKeyword;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionKeyword;
 
-  PROCEDURE BuildActionInteger(self: Parse.Integer; int: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildActionInteger(<*UNUSED*> self: Parse.Integer;
+      <*UNUSED*> int: INTEGER; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionInteger;
 
-  PROCEDURE BuildActionReal(self: Parse.Real; real: REAL;
+  PROCEDURE BuildActionReal(<*UNUSED*> self: Parse.Real; <*UNUSED*> real: REAL;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionReal;
 
-  PROCEDURE BuildActionChar(self: Parse.QuotedChar; char: CHAR;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildActionChar(<*UNUSED*> self: Parse.QuotedChar;
+      <*UNUSED*> char: CHAR; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionChar;
 
-  PROCEDURE BuildActionString(self: Parse.QuotedString; string: String.T;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildActionString(<*UNUSED*> self: Parse.QuotedString;
+      <*UNUSED*> string: String.T; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Tree.TermTop, location:=Err.NewLineLocation(info));
     END BuildActionString;
@@ -192,14 +198,14 @@ PROCEDURE Copy(tree: Parse.Tree; patEnv: Env): Parse.Tree RAISES ANY =
     END CheckPattern;
     
   PROCEDURE CheckTermPattern(actionTerm: Tree.Term; ideEnv: Env) RAISES ANY =
-    VAR tree: Parse.Tree; binder: Tree.IdeName;
+    VAR binder: Tree.IdeName;
     BEGIN
-      TYPECASE actionTerm OF
+      TYPECASE actionTerm OF <*NOWARN*>
       | NULL => Err.Fault(Out.out, "CheckTermPattern NIL");
       | Tree.TermIde(node) => 
 	  CheckPatternIde(node.name, ideEnv);
-      | Tree.TermPatternPosition(node) => 
-      | Tree.TermTop(node) => 
+      | Tree.TermPatternPosition => 
+      | Tree.TermTop => 
       | Tree.TermFun(node) =>
 	  INC(variantCounter);
 	  binder :=
@@ -248,13 +254,13 @@ PROCEDURE Copy(tree: Parse.Tree; patEnv: Env): Parse.Tree RAISES ANY =
     END CheckTermPattern;
 
   PROCEDURE CheckTypePattern(actionType: Tree.Type; ideEnv: Env) RAISES ANY =
-    VAR tree: Parse.Tree; binder: Tree.IdeName;
+    VAR binder: Tree.IdeName;
     BEGIN
-      TYPECASE actionType OF
+      TYPECASE actionType OF <*NOWARN*>
       | NULL => Err.Fault(Out.out, "CheckTypePattern NIL");
       | Tree.TypeIde(node) => 
 	  CheckPatternIde(node.name, ideEnv);
-      | Tree.TypePatternPosition(node) => 
+      | Tree.TypePatternPosition => 
       | Tree.TypeTop =>
       | Tree.TypeArrow(node) =>
 	  CheckTypePattern(node.dom, ideEnv);
@@ -325,7 +331,7 @@ PROCEDURE Copy(tree: Parse.Tree; patEnv: Env): Parse.Tree RAISES ANY =
 	base: INTEGER; ideEnv,patEnv: Env): Parse.Tree RAISES ANY =
     VAR tree: Parse.Tree; binder: Tree.IdeName;
     BEGIN
-      TYPECASE actionTerm OF
+      TYPECASE actionTerm OF <*NOWARN*>
       | NULL => Err.Fault(Out.out, "InstantiateTermPattern NIL");
       | Tree.TermIde(node) => 
 	  RETURN NEW(Tree.TermIde, location:=node.location,
@@ -419,13 +425,14 @@ PROCEDURE Copy(tree: Parse.Tree; patEnv: Env): Parse.Tree RAISES ANY =
 	    body:=InstantiateTermPattern(node.body, base,
 	      NEW(Env, name:=binder, rest:=ideEnv), patEnv));
       END;
+      RETURN NIL; (* make compiler happy *)
     END InstantiateTermPattern;
 
   PROCEDURE InstantiateTypePattern(actionType: Tree.Type;
 	base: INTEGER; ideEnv, patEnv: Env): Parse.Tree RAISES ANY =
     VAR tree: Parse.Tree; binder: Tree.IdeName;
     BEGIN
-      TYPECASE actionType OF
+      TYPECASE actionType OF <*NOWARN*>
       | NULL => Err.Fault(Out.out, "InstantiateTypePattern NIL");
       | Tree.TypeIde(node) => 
 	  RETURN NEW(Tree.TypeIde, location:=node.location,
@@ -480,6 +487,7 @@ PROCEDURE Copy(tree: Parse.Tree; patEnv: Env): Parse.Tree RAISES ANY =
 	    body:=InstantiateTypePattern(node.body, base,
 	      NEW(Env, name:=binder, rest:=ideEnv), patEnv));
       END;
+      RETURN NIL; (* make compiler happy *)
     END InstantiateTypePattern;
 
   VAR showExpansions: BOOLEAN;

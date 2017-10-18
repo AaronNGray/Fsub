@@ -1,8 +1,11 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 20:55:56 PDT 1998 by heydon     *)
 
 INTERFACE Value;
-IMPORT String, Formatter, Tree, Check;
+IMPORT Formatter, Tree, Check;
 
   TYPE
     Env = BRANDED OBJECT 

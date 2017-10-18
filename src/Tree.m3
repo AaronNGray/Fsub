@@ -1,5 +1,8 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:46:18 PDT 1998 by heydon     *)
 
 MODULE Tree;
 IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
@@ -48,69 +51,71 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
     termFunBindPos1, termFunBindPos2, termIterAppl, 
     termFold, termUnfold, termRec, termParen: Parse.NonTerminal;
 
-  PROCEDURE Select1(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE Select1(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+1];
     END Select1;
 
-  PROCEDURE Select2(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE Select2(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+2];
     END Select2;
 
-  PROCEDURE Select3(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE Select3(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+3];
     END Select3;
 
-  PROCEDURE Select4(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  <*UNUSED*>
+  PROCEDURE Select4(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+4];
     END Select4;
 
-  PROCEDURE Select5(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE Select5(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+5];
     END Select5;
 
-  PROCEDURE BuildIdeName(self: Parse.Identifier; text: TEXT;
+  PROCEDURE BuildIdeName(<*UNUSED*> self: Parse.Identifier; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(IdeName, location:=Err.NewLineLocation(info),
 	text:=text, variant:=0, absoluteEnvIndex:=-1);
     END BuildIdeName;
 
-  PROCEDURE BuildInteger(self: Parse.Integer; int: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildInteger(<*UNUSED*> self: Parse.Integer; int: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN NEW(IntegerTemp, int:=int);
     END BuildInteger;
 
-  PROCEDURE BuildString(self: Parse.QuotedString; string: String.T;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  <*UNUSED*>
+  PROCEDURE BuildString(<*UNUSED*> self: Parse.QuotedString; string: String.T;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN NEW(StringTemp, string:=string);
     END BuildString;
 
-  PROCEDURE BuildPhraseEmpty(self: Parse.GivenDelimiter;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildPhraseEmpty(<*UNUSED*> self: Parse.GivenDelimiter;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN NIL;
     END BuildPhraseEmpty;
 
-  PROCEDURE BuildPhraseSyntax(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildPhraseSyntax(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Grammar, location:=Err.NewLineLocation(info),
 	gramInfo:=NARROW(Parse.Stack[base+1], Gram.GramInfo));
     END BuildPhraseSyntax;
 
-  PROCEDURE BuildTypeBinding(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypeBinding(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     VAR bound: Parse.Tree;
     BEGIN
@@ -126,7 +131,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  rest:=Parse.Stack[base+5]);
     END BuildTypeBinding;
 
-  PROCEDURE BuildTermBinding(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermBinding(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN 
@@ -137,14 +142,14 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  rest:=Parse.Stack[base+5]);
     END BuildTermBinding;
 
-  PROCEDURE BuildTypeArrow(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypeArrow(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TypeArrow, location:=Err.NewLineLocation(info),
 	dom:=Parse.Stack[base+1], rng:=Parse.Stack[base+3]);
     END BuildTypeArrow;
 
-   PROCEDURE BuildTypeIde(self: Parse.Identifier; text: TEXT;
+   PROCEDURE BuildTypeIde(<*UNUSED*> self: Parse.Identifier; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TypeIde, location:=Err.NewLineLocation(info),
@@ -152,20 +157,20 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	index:=0);
     END BuildTypeIde;
 
-  PROCEDURE BuildTypePos(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypePos(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TypePatternPosition, location:=Err.NewLineLocation(info),
 	position:=NARROW(Parse.Stack[base+1], IntegerTemp).int);
     END BuildTypePos;
 
-  PROCEDURE BuildTypeTop(self: Parse.GivenKeyword;
+  PROCEDURE BuildTypeTop(<*UNUSED*> self: Parse.GivenKeyword;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TypeTop, location:=Err.NewLineLocation(info));
     END BuildTypeTop;
 
-  PROCEDURE BuildTypeForallIdeBinder(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypeForallIdeBinder(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     VAR bound: Parse.Tree;
     BEGIN
@@ -180,7 +185,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	body:=Parse.Stack[base+4]);
     END BuildTypeForallIdeBinder;
 
-  PROCEDURE BuildTypeForallPosBinder(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypeForallPosBinder(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     VAR bound: Parse.Tree;
     BEGIN
@@ -195,7 +200,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	body:=Parse.Stack[base+4]);
     END BuildTypeForallPosBinder;
 
-  PROCEDURE BuildTypeRec(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypeRec(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TypeRec, location:=Err.NewLineLocation(info),
@@ -203,7 +208,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	body:=Parse.Stack[base+2]);
     END BuildTypeRec;
 
-  PROCEDURE BuildTermIde(self: Parse.Identifier; text: TEXT;
+  PROCEDURE BuildTermIde(<*UNUSED*> self: Parse.Identifier; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermIde, location:=Err.NewLineLocation(info),
@@ -211,8 +216,8 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	index:=0);
     END BuildTermIde;
 
-  PROCEDURE BuildTermIdeOmit(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildTermIdeOmit(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       TYPECASE Parse.Stack[base+1] OF
       | TermIde(node) => node.omitArgs:=FALSE;
@@ -221,26 +226,26 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
       RETURN Parse.Stack[base+1];
     END BuildTermIdeOmit;
 
-  PROCEDURE BuildTermPos(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermPos(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermPatternPosition, location:=Err.NewLineLocation(info),
 	position:=NARROW(Parse.Stack[base+1], IntegerTemp).int);
     END BuildTermPos;
 
-  PROCEDURE BuildTermTop(self: Parse.GivenKeyword;
+  PROCEDURE BuildTermTop(<*UNUSED*> self: Parse.GivenKeyword;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermTop, location:=Err.NewLineLocation(info));
     END BuildTermTop;
 
-  PROCEDURE BuildOmitParam(self: Parse.GivenDelimiter;
+  PROCEDURE BuildOmitParam(<*UNUSED*> self: Parse.GivenDelimiter;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(OmitParam, location:=Err.NewLineLocation(info));
     END BuildOmitParam;
 
-  PROCEDURE BuildTermFunIde1(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermFunIde1(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       IF Parse.Stack[base+6]#NIL THEN
@@ -253,7 +258,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  body:=Parse.Stack[base+5]);
     END BuildTermFunIde1;
 
-  PROCEDURE BuildTermFunIde2NoBound(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermFunIde2NoBound(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN 
@@ -263,7 +268,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  body:=Parse.Stack[base+5]);
     END BuildTermFunIde2NoBound;
 
-  PROCEDURE BuildTermFunIde2(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermFunIde2(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN 
@@ -273,7 +278,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  body:=Parse.Stack[base+5]);
     END BuildTermFunIde2;
 
-  PROCEDURE BuildTermFunPos1(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermFunPos1(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       IF Parse.Stack[base+6]#NIL THEN
@@ -286,7 +291,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  body:=Parse.Stack[base+5]);
     END BuildTermFunPos1;
 
-  PROCEDURE BuildTermFunPos2(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermFunPos2(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN 
@@ -297,7 +302,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  body:=Parse.Stack[base+5]);
     END BuildTermFunPos2;
 
- PROCEDURE BuildTermFunPos2NoBound(self: Parse.Action; base: INTEGER;
+ PROCEDURE BuildTermFunPos2NoBound(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN 
@@ -308,35 +313,35 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	  body:=Parse.Stack[base+5]);
     END BuildTermFunPos2NoBound;
 
-  PROCEDURE BuildTermAppl1(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermAppl1(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermAppl, location:=Err.NewLineLocation(info),
 	fun:=Parse.Stack[base+1], arg:=Parse.Stack[base+3]);
     END BuildTermAppl1;
 
-  PROCEDURE BuildTermAppl2(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermAppl2(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermAppl2, location:=Err.NewLineLocation(info),
 	fun:=Parse.Stack[base+1], arg:=Parse.Stack[base+3]);
     END BuildTermAppl2;
 
-  PROCEDURE BuildTermFold(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermFold(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermFold, location:=Err.NewLineLocation(info),
 	recType:=Parse.Stack[base+1], arg:=Parse.Stack[base+2]);
     END BuildTermFold;
 
-  PROCEDURE BuildTermUnfold(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermUnfold(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermUnfold, location:=Err.NewLineLocation(info),
 	arg:=Parse.Stack[base+1]);
     END BuildTermUnfold;
 
-  PROCEDURE BuildTermRec(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermRec(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(TermRec, location:=Err.NewLineLocation(info),
@@ -344,21 +349,21 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	body:=Parse.Stack[base+3]);
     END BuildTermRec;
 
-  PROCEDURE BuildPhraseJudgeContext(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildPhraseJudgeContext(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(JudgeContext, location:=Err.NewLineLocation(info),
 	context:=Parse.Stack[base+1]);
     END BuildPhraseJudgeContext;
 
-  PROCEDURE BuildPhraseJudgeType(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildPhraseJudgeType(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(JudgeType, location:=Err.NewLineLocation(info),
 	context:=Parse.Stack[base+1], type:=Parse.Stack[base+2]);
     END BuildPhraseJudgeType;
 
-  PROCEDURE BuildPhraseJudgeSubtype(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildPhraseJudgeSubtype(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(JudgeSubtype, location:=Err.NewLineLocation(info),
@@ -366,7 +371,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	superType:=Parse.Stack[base+3]);
     END BuildPhraseJudgeSubtype;
 
-  PROCEDURE BuildPhraseJudgeTerm(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildPhraseJudgeTerm(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(JudgeTerm, location:=Err.NewLineLocation(info),
@@ -374,7 +379,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	type:=Parse.Stack[base+3]);
     END BuildPhraseJudgeTerm;
 
-  PROCEDURE BuildContextType(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildContextType(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(ContextType, location:=Err.NewLineLocation(info),
@@ -382,7 +387,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
         bound:=Parse.Stack[base+3], rest:=Parse.Stack[base+4]);
     END BuildContextType;
 
-  PROCEDURE BuildContextTerm(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildContextTerm(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(ContextTerm, location:=Err.NewLineLocation(info),
@@ -390,21 +395,21 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
 	rest:=Parse.Stack[base+4]);
     END BuildContextTerm;
 
-  PROCEDURE SameIdeName(name1, name2: IdeName): BOOLEAN RAISES ANY =
+  PROCEDURE SameIdeName(name1, name2: IdeName): BOOLEAN =
     BEGIN
       RETURN Text.Equal(name1.text, name2.text) AND 
         (name1.variant=name2.variant);
         (* ignoring  absoluteEnvIndex *)
     END SameIdeName;
 
-  PROCEDURE BeEnv(env: Env; name: IdeName; rest: Env) RAISES ANY =
+  PROCEDURE BeEnv(env: Env; name: IdeName; rest: Env) =
   BEGIN
     env.name := name;
     env.decoration := FreshDecoration(name, rest);
     env.rest := rest;
   END BeEnv;
 
-  PROCEDURE NewEnv(name: IdeName; rest: Env): Env RAISES ANY =
+  PROCEDURE NewEnv(name: IdeName; rest: Env): Env =
   VAR env: Env;
   BEGIN
     env := NEW(Env);
@@ -412,7 +417,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
     RETURN env;
   END NewEnv;
 
-  PROCEDURE FreshDecoration(name: IdeName; env: Env): INTEGER RAISES ANY =
+  PROCEDURE FreshDecoration(name: IdeName; env: Env): INTEGER =
   BEGIN
     LOOP
       IF env=NIL THEN RETURN 0 END;
@@ -421,7 +426,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
     END;
   END FreshDecoration;
 
-  PROCEDURE FetchDecoration(name: IdeName; env: Env): INTEGER RAISES ANY =
+  PROCEDURE FetchDecoration(name: IdeName; env: Env): INTEGER =
   BEGIN
     LOOP
       IF env=NIL THEN RETURN -1 END;
@@ -441,7 +446,6 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
   END PrintAbsoluteEnvIndex;
 
   PROCEDURE PrintIdeName(fmt: Formatter.T; name: IdeName; env:Env) RAISES ANY =
-  VAR i: INTEGER;
   BEGIN
     Formatter.Begin(fmt);
     Formatter.PutText(fmt, name.text);
@@ -468,14 +472,14 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
     Formatter.End(fmt);
   END PrintIde;
 
-  PROCEDURE FmtDecoration(decoration: INTEGER): TEXT RAISES ANY =
+  PROCEDURE FmtDecoration(decoration: INTEGER): TEXT =
   VAR res: TEXT;
   BEGIN
     IF decoration=0 THEN RETURN "" END;
     IF decoration<0 THEN RETURN "@" END;
     res := "";
     LOOP
-      CASE decoration MOD 4 OF
+      CASE decoration MOD 4 OF <*NOWARN*>
       | 1 => res := "\'" & res;
       | 2 => res := "\"" & res;
       | 3 => res := "^" & res;
@@ -487,13 +491,13 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
     RETURN res;
   END FmtDecoration;
 
-  PROCEDURE FmtAbsoluteEnvIndex(index: INTEGER): TEXT RAISES ANY =
+  PROCEDURE FmtAbsoluteEnvIndex(index: INTEGER): TEXT =
   BEGIN
     IF index >=0 THEN RETURN "##" & Fmt.Int(index) ELSE RETURN "" END;
   END FmtAbsoluteEnvIndex;
 
-  PROCEDURE FmtIdeName(name: IdeName; env: Env): TEXT RAISES ANY =
-  VAR i: INTEGER; text: TEXT;
+  PROCEDURE FmtIdeName(name: IdeName; env: Env): TEXT =
+  VAR text: TEXT;
   BEGIN
     text := name.text & FmtDecoration(FreshDecoration(name, env))
       & FmtAbsoluteEnvIndex(name.absoluteEnvIndex);
@@ -506,7 +510,7 @@ IMPORT String, Err, Command, Out, Text, Formatter, Fmt, Scanner, Parse, Gram;
     RETURN text;
   END FmtIdeName;
 
-  PROCEDURE FmtIde(name: IdeName; index: INTEGER; env: Env): TEXT RAISES ANY =
+  PROCEDURE FmtIde(name: IdeName; index: INTEGER; env: Env): TEXT =
   VAR text: TEXT;
   BEGIN
     text := FmtIdeName(name, env);
@@ -879,8 +883,7 @@ PROCEDURE Copy(tree: Parse.Tree): Parse.Tree RAISES ANY =
   END Copy;
 
   PROCEDURE GetGrammars(
-    VAR (*out*) actionTermGrammar, actionTypeGrammar: Parse.NonTerminal)
-    RAISES ANY =
+    VAR (*out*) actionTermGrammar, actionTypeGrammar: Parse.NonTerminal) =
   BEGIN
     actionTermGrammar := term; (* for use by Gram *)
     actionTypeGrammar := type; (* for use by Gram *)

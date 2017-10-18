@@ -1,5 +1,8 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 21:07:03 PDT 1998 by heydon     *)
 
 MODULE Check;
 IMPORT Err, Out, Text, Command, Scanner, Formatter, Tree;
@@ -272,11 +275,10 @@ PROCEDURE TraceExit(proc: TEXT; one, two: ROOT; env: Env; subst: Subst) RAISES A
   END TraceExit;
 
 PROCEDURE Lift(type: Type; lift, limit: INTEGER): Type RAISES ANY =
-  VAR instType: Type;
   BEGIN
     IF lift=0 THEN RETURN type END;
     TYPECASE type OF
-    | TypeUniVar(node) =>
+    | TypeUniVar =>
 	(* we are in the context of some substitution *)
 	RETURN type;
     | TypeIde(node) =>
@@ -300,7 +302,8 @@ PROCEDURE Lift(type: Type; lift, limit: INTEGER): Type RAISES ANY =
 	RETURN NEW(TypeRec, location:=node.location, tag:=node.tag,
 	  binder:=node.binder, 
 	  body:=Lift(node.body, lift, limit+1));
-    ELSE Err.Fault(Out.out, "Lift");
+    ELSE
+      <*NOWARN*> Err.Fault(Out.out, "Lift");
     END;
   END Lift;
 
@@ -310,7 +313,7 @@ PROCEDURE Lift(type: Type; lift, limit: INTEGER): Type RAISES ANY =
     BEGIN
       shift := 0;
       LOOP
-        TYPECASE subst OF
+        TYPECASE subst OF <*NOWARN*>
         | NULL => 
 	    Err.Fault(Out.out, "Check.Retrieve, unknown: " & 
 	      Tree.FmtIdeName(name, NIL));
@@ -341,7 +344,7 @@ PROCEDURE Lift(type: Type; lift, limit: INTEGER): Type RAISES ANY =
     BEGIN
       shift := 0;
       LOOP
-        TYPECASE subst OF
+        TYPECASE subst OF <*NOWARN*>
         | NULL => 
 	    Err.Fault(Out.out, "Check.SetRank, unknown: " & 
 	      Tree.FmtIdeName(name, NIL));
@@ -367,7 +370,7 @@ PROCEDURE Lift(type: Type; lift, limit: INTEGER): Type RAISES ANY =
       curr := subst;
       prev := NIL;
       LOOP
-        TYPECASE curr OF
+        TYPECASE curr OF <*NOWARN*>
         | NULL => 
 	    Err.Fault(Out.out, "Check.RemoveRank, unknown: " & 
 	      Tree.FmtIdeName(name, NIL));
@@ -394,7 +397,7 @@ PROCEDURE OccurCheck(var: TypeUniVar; rank1: INTEGER; initType,type: Type;
     env: Env; subst: Subst; level: INTEGER:=0) RAISES ANY =
   VAR instType: Type; rank2: INTEGER;
   BEGIN
-    TYPECASE type OF
+    TYPECASE type OF <*NOWARN*>
     | TypeUniVar(node) =>
 	IF Retrieve(node.name, subst, (*out*)instType, (*out*)rank2) THEN
 	  OccurCheck(var, rank1, initType, instType, env, subst, level);
@@ -505,7 +508,7 @@ VAR varCounter: INTEGER:=0;
 
 PROCEDURE Strip(type: Type; VAR (*in-out*)subst: Subst;
     VAR (*in-out*)omitCount: INTEGER): Type RAISES ANY =
-  VAR uniVar: Type; res, instType: Type; rank: INTEGER;
+  VAR res, instType: Type; rank: INTEGER;
   BEGIN
     TYPECASE type OF
     | TypeUniVar(node) =>
@@ -558,7 +561,7 @@ PROCEDURE ExposeArrow(type: Type; env: Env;
 	  env, (*in-out*)subst)
     | TypeArrow(arrowType) => RETURN arrowType;
     ELSE
-      TypeError("\'->\' type expected: ", type, env, subst);
+      <*NOWARN*> TypeError("\'->\' type expected: ", type, env, subst);
     END;
   END ExposeArrow;
 
@@ -597,7 +600,7 @@ PROCEDURE ExposeForall(type: Type; env: Env;
 	  env, (*in-out*)subst)
     | TypeForall(forallType) => RETURN forallType;
     ELSE
-      TypeError("\'All\' type expected: ", type, env, subst);
+      <*NOWARN*> TypeError("\'All\' type expected: ", type, env, subst);
     END;
   END ExposeForall;
 
@@ -628,7 +631,7 @@ PROCEDURE ExposeRec(type: Type; env: Env;
 	  env, (*in-out*)subst)
     | TypeRec(recType) => RETURN recType
     ELSE
-      TypeError("\'Rec\' type expected: ", type, env, subst);
+      <*NOWARN*> TypeError("\'Rec\' type expected: ", type, env, subst);
     END;
   END ExposeRec;
 
@@ -651,10 +654,9 @@ PROCEDURE Schemate(type: Type; binder: Tree.IdeName ; bound: Type;
 
 PROCEDURE Replace(type: Type; index: INTEGER; withType: Type)
     : Type RAISES ANY =
-  VAR instType: Type;
   BEGIN
     TYPECASE type OF
-    | TypeUniVar(node) =>
+    | TypeUniVar =>
 	(* this variable could not depend on index, so it stays as it is *)
 	RETURN type;
     | TypeIde(node) =>
@@ -679,7 +681,8 @@ PROCEDURE Replace(type: Type; index: INTEGER; withType: Type)
 	RETURN NEW(TypeRec,
 	  location:=node.location, tag:=node.tag, binder:=node.binder,
 	  body:=Replace(node.body, index+1, withType));
-    ELSE Err.Fault(Out.out, "Replace");
+    ELSE
+      <*NOWARN*> Err.Fault(Out.out, "Replace");
     END;
   END Replace;
 
@@ -689,7 +692,7 @@ TYPE
 
 PROCEDURE Constr(type1, type2: Type; env: Env; index: INTEGER;
   covariant: BOOLEAN; VAR (*in-out*)constraints: Constraints) RAISES ANY =
-VAR instType: Type; rank: INTEGER; ide1: TypeIde; newEnv, bodyEnv: Env;
+VAR ide1: TypeIde; newEnv, bodyEnv: Env;
   recConstraints: Constraints;
 BEGIN
   IF type1=type2 THEN
@@ -711,7 +714,7 @@ BEGIN
       type2, env, index, covariant, (*in-out*)constraints);
   ELSE
     TYPECASE type2 OF
-    | TypeIde(node2) =>
+    | TypeIde => (*SKIP*)
     | TypeArrow(node2) =>
         TYPECASE type1 OF
 	| TypeArrow(node1) =>
@@ -766,7 +769,7 @@ END Constr;
 
 PROCEDURE SubType(type1, type2: Type; env: Env; VAR(*in-out*)subst: Subst)
   RAISES ANY =
-VAR instType, instType1, instType2: Type; rank, rank1, rank2: INTEGER; 
+VAR instType1, instType2: Type; rank1, rank2: INTEGER; 
   ide1: TypeIde; constraints: Constraints; bodyEnv: Env;
 BEGIN
   IF traceSubtype THEN TraceEnter("SubType", type1, type2, env, subst); END;
@@ -800,7 +803,7 @@ BEGIN
       type2, env, (*in-out*) subst);
   ELSE
     TYPECASE type2 OF
-    | TypeIde(node2) =>
+    | TypeIde =>
 	SubtypeError("Expecting #1 <: #2:", type1, type2, env,subst);
     | TypeArrow(node2) =>
         TYPECASE type1 OF
@@ -906,7 +909,7 @@ PROCEDURE ExpandType(type, initType: Type; subst: Subst): Type RAISES ANY =
 	  & Tree.FmtIdeName(node.name, NIL)
 	  & " is still unresolved at the top-level", initType, NIL, subst);
 	END;
-    | TypeIde(node) => RETURN type;
+    | TypeIde => RETURN type;
     | TypeTop => RETURN type;
     | TypeArrow(node) =>
 	RETURN NEW(TypeArrow, location:=node.location, tag:=node.tag,
@@ -924,7 +927,8 @@ PROCEDURE ExpandType(type, initType: Type; subst: Subst): Type RAISES ANY =
 	  binder:=node.binder, 
 	  body:=ExpandType(node.body, initType,
 	   NEW(SubstShift, shift:=1, rest:=subst)));
-    ELSE Err.Fault(Out.out, "ExpandType");
+    ELSE
+      <*NOWARN*> Err.Fault(Out.out, "ExpandType");
     END;
   END ExpandType;
 
@@ -937,7 +941,8 @@ PROCEDURE ExpandTermEnv(env, endEnv: Env; subst: Subst): Env RAISES ANY =
           NewTermEnv(node.name, ExpandType(node.type, node.type, subst),
 	    ExpandTermEnv(node.rest, endEnv, 
 	      NEW(SubstShift, shift:=-1, rest:=subst)));
-    ELSE Err.Fault(Out.out, "ExpandTermEnv");
+    ELSE
+      <*NOWARN*> Err.Fault(Out.out, "ExpandTermEnv");
     END;
   END ExpandTermEnv;
 
@@ -954,7 +959,8 @@ PROCEDURE Contractive(type: Type; index: INTEGER): BOOLEAN RAISES ANY =
     | TypeRec(node) =>
 	RETURN Contractive(node.body, 1)
 	  AND Contractive(node.body, index+1);
-    ELSE Err.Fault(Out.out, "Contractive");
+    ELSE
+      <*NOWARN*> Err.Fault(Out.out, "Contractive");
     END;
   END Contractive;
 
@@ -1071,7 +1077,7 @@ PROCEDURE CheckTerm(term: Tree.Term; env: Env;
   PROCEDURE CheckContext(context: Tree.Context; env: Env): Env RAISES ANY =
     VAR nfBound, nfDom: Type;
     BEGIN
-      TYPECASE context OF
+      TYPECASE context OF <*NOWARN*>
       | NULL => RETURN env;
       | Tree.ContextType(node) =>
 	CheckType(node.bound, env, (*out*)nfBound);

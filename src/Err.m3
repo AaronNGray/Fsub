@@ -1,8 +1,11 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:21:28 PDT 1998 by heydon     *)
 
 MODULE Err;
-IMPORT Wr, Text, Fmt, Formatter;
+IMPORT Text, Fmt, Formatter;
 
 REVEAL
   Location =
@@ -21,18 +24,18 @@ TYPE
       begChar, endChar: INTEGER;
     END;
 
-PROCEDURE Setup() RAISES ANY =
+PROCEDURE Setup() =
   BEGIN
   END Setup;
 
-PROCEDURE NewCharLocation(READONLY begInfo, endInfo: LocationInfo): Location RAISES ANY =
+PROCEDURE NewCharLocation(READONLY begInfo, endInfo: LocationInfo): Location =
   BEGIN
     RETURN 
       NEW(CharLocation, fileName:=begInfo.fileName, 
 	begChar:=begInfo.char, endChar:=endInfo.char);
   END NewCharLocation;
 
-PROCEDURE NewLineLocation(READONLY info: LocationInfo): Location RAISES ANY =
+PROCEDURE NewLineLocation(READONLY info: LocationInfo): Location =
   BEGIN
     RETURN NEW(LineLocation, fileName:=info.fileName, 
 	line:=info.line, char:=info.lineChar);
@@ -85,7 +88,7 @@ PROCEDURE PrintLocation(fmt: Formatter.T;
     location: Location; currentLine: INTEGER) RAISES ANY =
   VAR relLine: INTEGER;
   BEGIN
-    TYPECASE location OF
+    TYPECASE location OF <*NOWARN*>
     | NULL =>
     | CharLocation(loc) =>
       IF Text.Empty(loc.fileName) THEN

@@ -1,10 +1,13 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:40:13 PDT 1998 by heydon     *)
 
 MODULE Eval;
-IMPORT Text, Err, Out, Tree, Check, Value;
+IMPORT Err, Out, Tree, Value;
 
-  PROCEDURE Setup() RAISES ANY =
+  PROCEDURE Setup() =
     BEGIN END Setup;
 
   PROCEDURE LookupVal(name: Tree.IdeName; index: INTEGER; env: Value.Env)
@@ -14,7 +17,7 @@ IMPORT Text, Err, Out, Tree, Check, Value;
       i := index;
       LOOP
 	IF i<0 THEN Err.Fault(Out.out, "Eval.LookupVal") END;
-	TYPECASE env OF
+	TYPECASE env OF <*NOWARN*>
 	| NULL => 
 	    Err.Fault(Out.out, "Unbound var: " 
 	      & Tree.FmtIde(name, index, NIL));
@@ -43,7 +46,6 @@ IMPORT Text, Err, Out, Tree, Check, Value;
 
   PROCEDURE TypeBinding(binding: Tree.TypeBinding; env: Value.Env)
     : Value.Env RAISES ANY =
-    VAR val: Value.Val;
     BEGIN
       TYPECASE binding OF
       | NULL => RETURN env;
@@ -78,7 +80,7 @@ IMPORT Text, Err, Out, Tree, Check, Value;
     END Strip;
 
   PROCEDURE Term(term: Tree.Term; env: Value.Env): Value.Val RAISES ANY =
-    VAR fun, arg: Value.Val; typeArg: Value.Set; val: Value.Val;
+    VAR arg: Value.Val; val: Value.Val;
       recEnv: Value.Env; susp: Value.ValSusp;
     BEGIN
       TYPECASE term OF
@@ -87,7 +89,7 @@ IMPORT Text, Err, Out, Tree, Check, Value;
 	  val:= LookupVal(node.name, node.index, env);
 	  IF node.omitArgs THEN val := Strip(val, node.omitCount); END;
 	  RETURN val;
-      | Tree.TermTop(node) =>
+      | Tree.TermTop =>
 	  RETURN NEW(Value.ValTop);
       | Tree.TermFun(node) =>
 	  RETURN NEW(Value.ValFun, fun:=node, env:=env);
@@ -117,12 +119,12 @@ IMPORT Text, Err, Out, Tree, Check, Value;
 	    NEW(Value.TermEnv, name:=node.binder, val:=susp, rest:=env);
 	  susp.env := recEnv;
 	  RETURN Term(node.body, recEnv);
-      ELSE Err.Fault(Out.out, "Eval ?");
+      ELSE
+        <*NOWARN*> Err.Fault(Out.out, "Eval ?");
       END;
     END Term;
 
   PROCEDURE Apply2(fun: Value.Val; arg: Value.Set): Value.Val RAISES ANY =
-    VAR typeArg: Value.Set;
     BEGIN
       TYPECASE fun OF
       | Value.ValFun2(clos) =>
@@ -132,7 +134,8 @@ IMPORT Text, Err, Out, Tree, Check, Value;
 		name:=clos.fun.binder,
 		type:=arg,
 		rest:=clos.env));
-      ELSE Err.Fault(Out.out, "Eval: application of a non-function");
+      ELSE
+        <*NOWARN*> Err.Fault(Out.out, "Eval: application of a non-function");
       END;
    END Apply2;
 

@@ -1,5 +1,8 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 20:53:56 PDT 1998 by heydon     *)
 
 INTERFACE String;
 (* Mutable strings of bytes *)
@@ -16,10 +19,11 @@ VAR
 PROCEDURE New(size: Size; init: CHAR): T RAISES ANY;
 (* Make a new string of length size, all full of the init char *)
 
-PROCEDURE FromArray(array: ARRAY OF CHAR): T RAISES ANY;
+PROCEDURE FromArray(READONLY array: ARRAY OF CHAR): T RAISES ANY;
 (* Make a new string out of an array of chars. *)
 
-PROCEDURE FromSubArray(array: ARRAY OF CHAR; start: Index; size: Size): T RAISES ANY;
+PROCEDURE FromSubArray(READONLY array: ARRAY OF CHAR; start: Index; size: Size)
+  : T RAISES ANY;
 (* Make a new string out of an array of chars. *)
 
 PROCEDURE IsEmpty(string: T): BOOLEAN RAISES ANY;

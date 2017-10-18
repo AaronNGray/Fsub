@@ -1,8 +1,11 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 20:22:08 PDT 1998 by heydon     *)
 
 MODULE Gram;
-IMPORT String, Err, Text, Out, Formatter, Fmt, Scanner, Parse, Act;
+IMPORT String, Err, Text, Out, Formatter, Scanner, Parse, Act;
 
   REVEAL
     Parse.Grammar = Parse.Tree BRANDED OBJECT END;
@@ -110,7 +113,7 @@ TYPE
 
   PROCEDURE BeKeywordsOfGram(gram: Parse.Grammar; keySet: Scanner.KeywordSet) RAISES ANY =
     BEGIN
-      TYPECASE gram OF
+      TYPECASE gram OF <*NOWARN*>
       | NULL =>
       | Parse.NonTerminal =>
       | Parse.Storage(node) => BeKeywordsOfGram(node.item, keySet);
@@ -142,30 +145,29 @@ TYPE
     Formatter.PutChar(fmt, '\n');
   END PrintClauseList;
 
-  PROCEDURE BuildInteger(self: Parse.Integer; int: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildInteger(<*UNUSED*> self: Parse.Integer; int: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN NEW(IntegerTemp, int:=int);
     END BuildInteger;
 
-  PROCEDURE BuildIde(self: Parse.Identifier; name: TEXT;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildIde(<*UNUSED*> self: Parse.Identifier; name: TEXT;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN NEW(IdeNode, ide:=name);
     END BuildIde;
 
-  PROCEDURE BuildName(self: Parse.GivenName;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildName(<*UNUSED*> self: Parse.GivenName;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN NEW(TempFlag);
     END BuildName;
 
-  PROCEDURE BuildSyntaxDecl(self: Parse.EnvCapture; 
+  PROCEDURE BuildSyntaxDecl(<*UNUSED*> self: Parse.EnvCapture; 
 	base: INTEGER; env: Parse.GrammarEnv;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
-    VAR failed: BOOLEAN; tree: Parse.Tree; clauseList: ClauseList;
-      topGram: Parse.Grammar; oldKeySet, newKeySet: Scanner.KeywordSet;
-      ide: TEXT;
+    VAR clauseList: ClauseList; topGram: Parse.Grammar;
+      oldKeySet, newKeySet: Scanner.KeywordSet;
     BEGIN
       clauseList := NARROW(Parse.Stack[base+1], ClauseList);
       oldKeySet := Scanner.GetKeywordSet();
@@ -200,7 +202,7 @@ TYPE
       Scanner.UseKeywordSet(info.oldKeySet);
     END UndoSyntaxDecl;
 
-  PROCEDURE BuildSyntax(self: Parse.EnvCapture; 
+  PROCEDURE BuildSyntax(<*UNUSED*> self: Parse.EnvCapture; 
 	base: INTEGER; env: Parse.GrammarEnv;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     VAR tree: Parse.Tree; clauseList: ClauseList;
@@ -236,16 +238,16 @@ TYPE
       END;
     END BuildSyntax;
 
-  PROCEDURE BuildGrammar(self:Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
-    VAR list, env: ClauseList;
+  PROCEDURE BuildGrammar(<*UNUSED*> self:Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
+    VAR list: ClauseList;
     BEGIN
       list := NARROW(Parse.Stack[base+1], ClauseList);
 (* -- check that names in list are unique, whether extensions or not. *)
       RETURN list;
     END BuildGrammar;
 
-  PROCEDURE BuildClauseList(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildClauseList(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     VAR clauseExtends: ClauseExtends;
     BEGIN
@@ -261,57 +263,61 @@ TYPE
 	  rest:=NARROW(Parse.Stack[base+4], ClauseList)); 
     END BuildClauseList;
 
-  PROCEDURE BuildClauseExtendsChoice(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildClauseExtendsChoice(<*UNUSED*> self: Parse.Action;
+        <*UNUSED*> base: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo)
+        : Parse.Tree =
     BEGIN
       RETURN NEW(ClauseExtends, extend:=TRUE, iter:=FALSE,
 	iterPosPresent:=FALSE, iterPos:=0);
     END BuildClauseExtendsChoice;
 
-  PROCEDURE BuildClauseExtendsIterPos(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildClauseExtendsIterPos(<*UNUSED*> self: Parse.Action; 
+        base: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo)
+        : Parse.Tree =
     BEGIN
       RETURN NEW(ClauseExtends, extend:=TRUE, iter:=TRUE,
 	iterPosPresent:=TRUE, 
 	iterPos:=NARROW(Parse.Stack[base+3], IntegerTemp).int);
     END BuildClauseExtendsIterPos;
 
-  PROCEDURE BuildClauseExtendsIterNoPos(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildClauseExtendsIterNoPos(<*UNUSED*> self: Parse.Action;
+        <*UNUSED*> base: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo)
+        : Parse.Tree =
     BEGIN
       RETURN NEW(ClauseExtends, extend:=TRUE, iter:=TRUE,
 	iterPosPresent:=FALSE, iterPos:=0);
     END BuildClauseExtendsIterNoPos;
 
-  PROCEDURE BuildClauseExtendsIter(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildClauseExtendsIter(<*UNUSED*> self: Parse.Action;
+        base: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo)
+        : Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+2];
     END BuildClauseExtendsIter;
 
-  PROCEDURE BuildClauseExtendsNo(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildClauseExtendsNo(<*UNUSED*> self: Parse.Action;
+        <*UNUSED*> base: INTEGER; <*UNUSED*> READONLY info: Err.LocationInfo)
+        : Parse.Tree =
     BEGIN
       RETURN NEW(ClauseExtends, extend:=FALSE, iter:=FALSE);
     END BuildClauseExtendsNo;
 
-  PROCEDURE BuildClauseExtendsYes(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildClauseExtendsYes(<*UNUSED*> self: Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+1];
     END BuildClauseExtendsYes;
 
-  PROCEDURE BuildGramIde(self: Parse.Identifier; name: TEXT;
+  PROCEDURE BuildGramIde(<*UNUSED*> self: Parse.Identifier; name: TEXT;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.NonTerminal, location:=Err.NewLineLocation(info),
  	name:=name);
     END BuildGramIde;
 
-  PROCEDURE BuildGramString(self: Parse.QuotedString; string: String.T;
-	READONLY info: Err.LocationInfo)
+  PROCEDURE BuildGramString(<*UNUSED*> self: Parse.QuotedString;
+        string: String.T; READONLY info: Err.LocationInfo)
       : Parse.Tree RAISES ANY =
-    VAR key: Scanner.Keyword;
     BEGIN
       IF String.Length(string)=0 THEN 
 	Err.Fault(Out.out, "Invalid token: \"\"") 
@@ -327,46 +333,47 @@ TYPE
 	    NEW(Parse.GivenKeyword, location:=Err.NewLineLocation(info),
 	      ide:=String.ToText(string), key:=NIL,
 	      Build:=Act.BuildActionKeyword);
-      ELSE Err.Fault(Out.out, "Invalid token: "&String.ToText(string));
+      ELSE
+        <*NOWARN*> Err.Fault(Out.out, "Invalid token: "&String.ToText(string));
       END;
     END BuildGramString;
 
-  PROCEDURE BuildGramKeyIde(self: Parse.GivenKeyword;
+  PROCEDURE BuildGramKeyIde(<*UNUSED*> self: Parse.GivenKeyword;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Identifier, location:=Err.NewLineLocation(info),
 	Build:=Act.BuildActionIdentifier);
     END BuildGramKeyIde;
 
-  PROCEDURE BuildGramKeyInt(self: Parse.GivenKeyword;
+  PROCEDURE BuildGramKeyInt(<*UNUSED*> self: Parse.GivenKeyword;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Integer, location:=Err.NewLineLocation(info),
 	Build:=Act.BuildActionInteger);
     END BuildGramKeyInt;
 
-  PROCEDURE BuildGramKeyReal(self: Parse.GivenKeyword;
+  PROCEDURE BuildGramKeyReal(<*UNUSED*> self: Parse.GivenKeyword;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Real, location:=Err.NewLineLocation(info),
 	Build:=Act.BuildActionReal);
     END BuildGramKeyReal;
 
-  PROCEDURE BuildGramKeyChar(self: Parse.GivenKeyword;
+  PROCEDURE BuildGramKeyChar(<*UNUSED*> self: Parse.GivenKeyword;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.QuotedChar, location:=Err.NewLineLocation(info),
 	Build:=Act.BuildActionChar);
     END BuildGramKeyChar;
 
-  PROCEDURE BuildGramKeyString(self: Parse.GivenKeyword;
+  PROCEDURE BuildGramKeyString(<*UNUSED*> self: Parse.GivenKeyword;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.QuotedString, location:=Err.NewLineLocation(info),
 	Build:=Act.BuildActionString);
     END BuildGramKeyString;
 
-  PROCEDURE BuildGramList(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildGramList(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN 
@@ -376,12 +383,12 @@ TYPE
     END BuildGramList;
 
   PROCEDURE BuildActionPattern(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN Act.InstantiatePattern(self.action, base);
     END BuildActionPattern;
 
-  PROCEDURE BuildStorage(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildStorage(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Storage, location:=Err.NewLineLocation(info),
@@ -389,40 +396,39 @@ TYPE
 	item:=Parse.Stack[base+1]);
     END BuildStorage;
 
-  PROCEDURE BuildGramExpSequence(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildGramExpSequence(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Sequence, location:=Err.NewLineLocation(info),
 	items:=Parse.Stack[base+1]);
     END BuildGramExpSequence;
 
-  PROCEDURE BuildGramExpChoice(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildGramExpChoice(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
-    VAR choice: Parse.Choice; name: TEXT;
     BEGIN
       RETURN NEW(Parse.Choice, location:=Err.NewLineLocation(info),
 	choice:=Parse.Stack[base+1]);
     END BuildGramExpChoice;
 
-  PROCEDURE BuildGramExpParens(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildGramExpParens(<*UNUSED*> self: Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+6];
     END BuildGramExpParens;
 
-  PROCEDURE BuildGramExpBase(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildGramExpBase(<*UNUSED*> self: Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+1];
     END BuildGramExpBase;
 
-  PROCEDURE BuildGramExpIter(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildGramExpIter(<*UNUSED*> self: Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+5];
     END BuildGramExpIter;
 
-  PROCEDURE BuildGramExpIterNoPos(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildGramExpIterNoPos(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Iter, location:=Err.NewLineLocation(info),
@@ -432,7 +438,7 @@ TYPE
 	accumPosition:=0);
     END BuildGramExpIterNoPos;
 
-  PROCEDURE BuildGramExpIterPos(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildGramExpIterPos(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       RETURN NEW(Parse.Iter, location:=Err.NewLineLocation(info),
@@ -442,7 +448,7 @@ TYPE
         accumPosition:=NARROW(Parse.Stack[base+4], IntegerTemp).int);
     END BuildGramExpIterPos;
 
-  PROCEDURE BuildTermAction(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTermAction(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       Act.CheckPattern(Parse.Stack[base+3]);
@@ -452,7 +458,7 @@ TYPE
 	Build:=BuildActionPattern);
     END BuildTermAction;
 
-  PROCEDURE BuildTypeAction(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildTypeAction(<*UNUSED*> self: Parse.Action; base: INTEGER;
 	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
     BEGIN
       Act.CheckPattern(Parse.Stack[base+3]);
@@ -462,14 +468,14 @@ TYPE
 	Build:=BuildActionPattern);
     END BuildTypeAction;
 
-  PROCEDURE BuildSingle(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildSingle(<*UNUSED*> self: Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+1];
     END BuildSingle;
 
-  PROCEDURE BuildGramExp(self: Parse.Action; base: INTEGER;
-	READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildGramExp(<*UNUSED*> self: Parse.Action; base: INTEGER;
+	<*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
     BEGIN
       RETURN Parse.Stack[base+2];
     END BuildGramExp;

@@ -1,12 +1,15 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Mon Sep 28 11:12:29 PDT 1998 by heydon     *)
 
 MODULE Main;
-IMPORT Out, Rd, String, Text, TextRd, Err, Scanner, Formatter, FileStream, Fmt, 
+IMPORT Out, Rd, Text, Err, Scanner, Formatter, Fmt, 
   Parse, Gram, Act, Tree, Scope, Check, Value, Eval, Command, Frame;
 
 CONST
-  Version = 1; Enhancement = 5; BugFix = 0;
+  Version = 1; Enhancement = 6; BugFix = 0;
 
 VAR showAfterParsing: BOOLEAN := FALSE;
 
@@ -43,7 +46,7 @@ PROCEDURE ShowVersion(self: Command.T; arg: TEXT) RAISES ANY =
 
 PROCEDURE DoIt() RAISES ANY =
   VAR
-    phrase: Parse.Tree; type: Tree.Type;
+    phrase: Parse.Tree;
     nfType, nfSubType, nfSuperType: Check.Type; 
     value: Value.Val; 
     scopeEnv: Scope.Env; checkEnv: Check.Env; 
@@ -59,7 +62,7 @@ PROCEDURE DoIt() RAISES ANY =
       TRY
         Scanner.FirstPrompt();
 	phrase:=Parse.Read(Frame.topGram, Frame.topEnv);
-	TYPECASE phrase OF
+	TYPECASE phrase OF <*NOWARN*>
 	| Frame.Command(node) =>
 	    Command.Exec(node.name, node.arg);
 	| Frame.Reload(node) =>
@@ -76,7 +79,7 @@ PROCEDURE DoIt() RAISES ANY =
 	    Frame.RestoreFrame(node.name);	    
 	| Frame.None =>
           phrase:= Parse.Read(Frame.topPhraseGram, Frame.topPhraseEnv);
-  	  TYPECASE phrase OF
+  	  TYPECASE phrase OF <*NOWARN*>
 	  | NULL =>
 	  | Tree.Grammar(node) =>
 	      IF node.gramInfo.adoptAsTopLevelGrammar THEN
@@ -220,19 +223,20 @@ PROCEDURE DoIt() RAISES ANY =
   END DoIt;
 
 BEGIN
-  Out.Setup();
-  Err.Setup();
-  Command.Setup();
-  Scanner.Setup();
-  Parse.Setup();
-  Gram.Setup();
-  Act.Setup();
-  Tree.Setup();
-  Scope.Setup();
-  Check.Setup();
-  Value.Setup();
-  Eval.Setup();
-  Frame.Setup();
+  TRY
+    Out.Setup();
+    Err.Setup();
+    Command.Setup();
+    Scanner.Setup();
+    Parse.Setup();
+    Gram.Setup();
+    Act.Setup();
+    Tree.Setup();
+    Scope.Setup();
+    Check.Setup();
+    Value.Setup();
+    Eval.Setup();
+    Frame.Setup();
 
     Command.Register(
       NEW(Command.T, name:="Version", 
@@ -242,6 +246,7 @@ BEGIN
       NEW(Command.T, name:="ShowParsing", 
 	Exec:=ShowAfterParsing));
 
-  DoIt();
-
+    DoIt();
+  EXCEPT ELSE (*SKIP*)
+  END
 END Main.

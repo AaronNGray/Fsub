@@ -1,8 +1,11 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 19:50:52 PDT 1998 by heydon     *)
 
 INTERFACE Scanner;
-IMPORT Err, String, Wr, Rd;
+IMPORT Err, String, Rd;
 
 TYPE
   Keyword <: ROOT;

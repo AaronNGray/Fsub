@@ -1,10 +1,13 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 22:31:24 PDT 1998 by heydon     *)
 
 MODULE Value;
-IMPORT Text, Err, Out, String, Formatter, Fmt, Tree, Check;
+IMPORT Err, Out, Formatter, Tree, Check;
 
-  PROCEDURE Setup() RAISES ANY =
+  PROCEDURE Setup() =
     BEGIN
       topEnv := NIL;
     END Setup;
@@ -27,7 +30,7 @@ IMPORT Text, Err, Out, String, Formatter, Fmt, Tree, Check;
     | ValTop => Formatter.PutText(fmt, "top");
     | ValFun(val) => PrintTerm(fmt, val.fun, val.env, printEnv);
     | ValFun2(val) => PrintTerm(fmt, val.fun, val.env, printEnv);
-    | ValSusp(val) => Formatter.PutText(fmt, "<recursive>"); (* ---- *)
+    | ValSusp => Formatter.PutText(fmt, "<recursive>"); (* ---- *)
     ELSE Formatter.PutText(fmt, "<?>");
     END;
   END PrintVal;
@@ -45,7 +48,7 @@ PROCEDURE PrintIde(fmt: Formatter.T; name: Tree.IdeName; index: INTEGER;
     i := index;
     LOOP
       IF i<0 THEN Err.Fault(Out.out, "Value.PrintIde") END;
-      TYPECASE env OF
+      TYPECASE env OF <*NOWARN*>
       | NULL => 
 	  Err.Fault(Out.out, "PrintIde: " & Tree.FmtIde(name, index, NIL));
       | TypeDefEnv(node) =>
@@ -157,7 +160,7 @@ PROCEDURE PrintTypeBinding1(fmt: Formatter.T;
     TYPECASE checkEnv OF
     | Check.TypeDefEnv(checkNode) =>
 	TYPECASE env OF
-	| TypeDefEnv(valueNode) =>
+	| TypeDefEnv =>
 	    Formatter.Begin(fmt, 2);
 	      Formatter.Begin(fmt, 4);
 	        Tree.PrintIdeName(fmt, checkNode.name, checkEnv);
@@ -193,7 +196,7 @@ PROCEDURE PrintTerm(fmt: Formatter.T; term: Tree.Term;
 	  Formatter.PutChar(fmt, '!');
   	  Formatter.Begin(fmt);
 	END;
-    | Tree.TermTop(node) => Formatter.PutText(fmt, "top");
+    | Tree.TermTop => Formatter.PutText(fmt, "top");
     | Tree.TermFun(node) =>
 	Formatter.Begin(fmt, 2);
 	  Formatter.Begin(fmt, 4);
@@ -303,7 +306,7 @@ PROCEDURE PrintTerm(fmt: Formatter.T; term: Tree.Term;
 
   PROCEDURE PrintType(fmt: Formatter.T; type: Tree.Type; 
     env: Env; printEnv: Tree.Env) RAISES ANY =
-  VAR newPrintEnv: Tree.Env; uniVars: Tree.Env;
+  VAR newPrintEnv: Tree.Env;
   BEGIN
     IF type=NIL THEN Formatter.PutChar(fmt, '_'); RETURN END;
     IF type.tag#NIL THEN PrintTag(fmt, type.tag); RETURN END;

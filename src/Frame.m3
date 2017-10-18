@@ -1,8 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sun Aug 16 12:12:42 PDT 1998 by heydon     *)
+
 MODULE Frame;
 IMPORT Parse, Err, Out, String, Scanner, Scope, Check, Value, Gram, 
-Rd, TextRd, FileStream, Formatter, Text;
+  Rd, TextRd, FileRd, Formatter, Text, OSError;
 
 REVEAL
   Env = BRANDED OBJECT
@@ -26,12 +30,12 @@ PROCEDURE LoadFile(fileName: TEXT; complain: BOOLEAN:=TRUE) RAISES ANY =
   VAR rd: Rd.T;
   BEGIN
     TRY 
-      rd:= FileStream.OpenRead(fileName);
+      rd:= FileRd.Open(fileName);
       Formatter.PutText(Out.out, "Loading " & fileName);
       Formatter.NewLine(Out.out);
       Scanner.PushInput(fileName, rd);
     EXCEPT 
-    | Rd.Failure => 
+    | OSError.E => 
 	IF complain THEN 
 	  Err.Fault(Out.out, "Could not open file: " & fileName) 
 	END;
@@ -42,7 +46,6 @@ PROCEDURE ModuleFrame(name: TEXT; imports: NameList) RAISES ANY =
 (* Push scanner inputs so it will first load the imports first
    to last, then establish a frame for this module, and then
    finish reading this module. *)
-  VAR scan: Env;
   BEGIN
     Scanner.PushInput("<none>", TextRd.New("establish " & name & ";\n"));
     LoadImports(imports);
@@ -77,14 +80,14 @@ PROCEDURE EstablishFrame(name: TEXT) RAISES ANY =
     END;
   END EstablishFrame;
 
-PROCEDURE SaveGramInfo(gramInfo: Gram.GramInfo) RAISES ANY =
+PROCEDURE SaveGramInfo(gramInfo: Gram.GramInfo) =
   BEGIN
     topFrame.gramInfos:=
       NEW(GramInfos, first:=gramInfo, 
 	rest:=topFrame.gramInfos);
   END SaveGramInfo;
 
-PROCEDURE SaveFrame(name: TEXT) RAISES ANY =
+PROCEDURE SaveFrame(name: TEXT) =
   BEGIN
     topFrame :=
 	NEW(Env, name:=name, 
@@ -119,7 +122,7 @@ PROCEDURE RestoreFrame(name: TEXT) RAISES ANY =
     END;
   END RestoreFrame;
 
-PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
+PROCEDURE FindFrame(name: TEXT): Env =
   VAR scan: Env;
   BEGIN
     scan:=topFrame;
@@ -131,7 +134,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
     RETURN scan;
   END FindFrame;
 
-  PROCEDURE BuildName(self: Parse.Name; text: TEXT;
+  PROCEDURE BuildName(<*UNUSED*> self: Parse.Name; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -139,7 +142,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=text);
   END BuildName;
 
-  PROCEDURE BuildCommand(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildCommand(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   VAR name, arg: TEXT;
   BEGIN
@@ -156,7 +159,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=name, arg:=arg);
   END BuildCommand;
 
-  PROCEDURE BuildReloadName(self: Parse.Name; text: TEXT;
+  PROCEDURE BuildReloadName(<*UNUSED*> self: Parse.Name; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -164,15 +167,16 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=text & ".fsub");
   END BuildReloadName;
 
-  PROCEDURE BuildReloadString(self: Parse.QuotedString; string: String.T;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildReloadString(<*UNUSED*> self: Parse.QuotedString;
+      string: String.T; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
       NEW(Reload, location:=Err.NewLineLocation(info),
         name:=String.ToText(string));
   END BuildReloadString;
 
-  PROCEDURE BuildLoad(self: Parse.Name; text: TEXT;
+  PROCEDURE BuildLoad(<*UNUSED*> self: Parse.Name; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -180,7 +184,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=text);
   END BuildLoad;
 
-  PROCEDURE BuildModuleFrame(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildModuleFrame(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -189,7 +193,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
 	imports:=Parse.Stack[base+2]);
   END BuildModuleFrame;
 
-  PROCEDURE BuildImportList(self: Parse.Action; base: INTEGER;
+  PROCEDURE BuildImportList(<*UNUSED*> self: Parse.Action; base: INTEGER;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -198,7 +202,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
 	rest:=Parse.Stack[base+2]);
   END BuildImportList;
 
-  PROCEDURE BuildEstablishFrame(self: Parse.Name; text: TEXT;
+  PROCEDURE BuildEstablishFrame(<*UNUSED*> self: Parse.Name; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -206,7 +210,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=text);
   END BuildEstablishFrame;
 
-  PROCEDURE BuildSaveFrame(self: Parse.Name; text: TEXT;
+  PROCEDURE BuildSaveFrame(<*UNUSED*> self: Parse.Name; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -214,7 +218,7 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=text);
   END BuildSaveFrame;
 
-  PROCEDURE BuildRestoreFrame(self: Parse.Name; text: TEXT;
+  PROCEDURE BuildRestoreFrame(<*UNUSED*> self: Parse.Name; text: TEXT;
       READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
@@ -222,29 +226,31 @@ PROCEDURE FindFrame(name: TEXT): Env RAISES ANY =
         name:=text);
   END BuildRestoreFrame;
 
-  PROCEDURE BuildRestoreFirstFrame(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildRestoreFirstFrame(<*UNUSED*> self: Parse.Action;
+      <*UNUSED*> base: INTEGER; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
       NEW(Restore, location:=Err.NewLineLocation(info),
         name:="");
   END BuildRestoreFirstFrame;
 
-  PROCEDURE BuildNoFrame(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE BuildNoFrame(<*UNUSED*> self: Parse.Action;
+      <*UNUSED*> base: INTEGER; READONLY info: Err.LocationInfo)
+      : Parse.Tree RAISES ANY =
   BEGIN
     RETURN 
       NEW(None, location:=Err.NewLineLocation(info));
   END BuildNoFrame;
 
-  PROCEDURE Select1(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE Select1(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
   BEGIN
     RETURN Parse.Stack[base+1];
   END Select1;
 
-  PROCEDURE Select3(self: Parse.Action; base: INTEGER;
-      READONLY info: Err.LocationInfo): Parse.Tree RAISES ANY =
+  PROCEDURE Select3(<*UNUSED*> self: Parse.Action; base: INTEGER;
+      <*UNUSED*> READONLY info: Err.LocationInfo): Parse.Tree =
   BEGIN
     RETURN Parse.Stack[base+3];
   END Select3;

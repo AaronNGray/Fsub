@@ -1,12 +1,15 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                             *)
+(* Created by Luca Cardelli                                    *)
+(* Last modified on Sat Aug 15 20:47:09 PDT 1998 by heydon     *)
 
 MODULE String;
 IMPORT Text;
 
 (* Modifiable strings of bytes *)
 
-PROCEDURE New(size: Size; init: CHAR): T RAISES ANY =
+PROCEDURE New(size: Size; init: CHAR): T =
   VAR res: T; i: INTEGER;
   BEGIN
     res := NEW(T, size);
@@ -15,7 +18,7 @@ PROCEDURE New(size: Size; init: CHAR): T RAISES ANY =
     RETURN res;
   END New;
 
-PROCEDURE FromArray(array: ARRAY OF CHAR): T RAISES ANY =
+PROCEDURE FromArray(READONLY array: ARRAY OF CHAR): T =
   VAR res: T; i, size: INTEGER;
   BEGIN
     size := NUMBER(array);
@@ -25,7 +28,8 @@ PROCEDURE FromArray(array: ARRAY OF CHAR): T RAISES ANY =
     RETURN res;
   END FromArray;
 
-PROCEDURE FromSubArray(array: ARRAY OF CHAR; start: Index; size: Size): T RAISES ANY =
+PROCEDURE FromSubArray(READONLY array: ARRAY OF CHAR;
+  start: Index; size: Size): T =
   VAR res: T; i: INTEGER;
   BEGIN
     res := NEW(T, size);
@@ -34,20 +38,19 @@ PROCEDURE FromSubArray(array: ARRAY OF CHAR; start: Index; size: Size): T RAISES
     RETURN res;
   END FromSubArray;
 
-PROCEDURE IsEmpty(string: T): BOOLEAN RAISES ANY =
+PROCEDURE IsEmpty(string: T): BOOLEAN =
   BEGIN RETURN NUMBER(string^) = 0; END IsEmpty;
 
-PROCEDURE Length(string: T): Size RAISES ANY = 
+PROCEDURE Length(string: T): Size = 
   BEGIN RETURN NUMBER(string^); END Length;
 
-PROCEDURE GetChar(string: T; index: Index): CHAR RAISES ANY =
+PROCEDURE GetChar(string: T; index: Index): CHAR =
   BEGIN RETURN string^[index]; END GetChar;
 
-PROCEDURE SetChar(string: T; index: Index; char: CHAR) RAISES ANY =
+PROCEDURE SetChar(string: T; index: Index; char: CHAR) =
   BEGIN string^[index] := char; END SetChar;
 
-PROCEDURE GetSub(source: T; sourceStart: Index; sourceSize: Size): T 
-    RAISES ANY =
+PROCEDURE GetSub(source: T; sourceStart: Index; sourceSize: Size): T =
   VAR res: T; i: INTEGER;
   BEGIN
     res := NEW(T, sourceSize);
@@ -64,7 +67,7 @@ PROCEDURE SetSub(
     destinStart: Index;
     source: T;
     sourceStart: Index;
-    sourceSize: Size) RAISES ANY =
+    sourceSize: Size) =
   VAR i: INTEGER;
   BEGIN
     i := 0;
@@ -74,7 +77,7 @@ PROCEDURE SetSub(
     END;
   END SetSub;
 
-PROCEDURE Cat(string1, string2: T): T RAISES ANY =
+PROCEDURE Cat(string1, string2: T): T =
   VAR res: T; i, size1, size2: INTEGER;
   BEGIN
     size1 := NUMBER(string1^);
@@ -94,7 +97,7 @@ PROCEDURE CatSub(
     string2: T;
     start2: Index;
     size2: Size)
-    : T RAISES ANY =
+    : T =
   VAR res: T; i: INTEGER;
   BEGIN
     res := NEW(T, size1 + size2);
@@ -115,7 +118,7 @@ PROCEDURE Replace(
     source: T;
     sourceStart: Index;
     sourceSize: Size)
-    : T RAISES ANY =
+    : T =
   VAR res: T; i, j, k, destinLength: INTEGER;
   BEGIN
     destinLength := NUMBER(destin^);
@@ -142,7 +145,7 @@ PROCEDURE Replace(
     RETURN res;
   END Replace;
 
-PROCEDURE Equal(string1, string2: T): BOOLEAN RAISES ANY =
+PROCEDURE Equal(string1, string2: T): BOOLEAN =
   VAR length, i: INTEGER;
   BEGIN
     length := NUMBER(string1^);
@@ -162,7 +165,7 @@ PROCEDURE EqualSub(
     string2: T;
     start2: Index;
     size2: Size)
-    : BOOLEAN RAISES ANY =
+    : BOOLEAN =
   VAR i: INTEGER;
   BEGIN
     IF size1 # size2 THEN RETURN FALSE END;
@@ -174,7 +177,7 @@ PROCEDURE EqualSub(
     RETURN TRUE;
   END EqualSub;
 
-PROCEDURE Compare(string1, string2: T): Comparison RAISES ANY =
+PROCEDURE Compare(string1, string2: T): Comparison =
   VAR size1, size2, i: INTEGER;
   BEGIN
     size1 := NUMBER(string1^);
@@ -203,7 +206,7 @@ PROCEDURE CompareSub(
     start2: Index;
     size2: Size;
     ignoreCase: BOOLEAN)
-    : Comparison RAISES ANY =
+    : Comparison =
   VAR i: INTEGER;
   BEGIN
 (* -- ignoreCase not implemented. *)
@@ -242,7 +245,7 @@ PROCEDURE CompareSub(
 
 *)
 
-PROCEDURE FromText(text: TEXT): T RAISES ANY =
+PROCEDURE FromText(text: TEXT): T =
   VAR res: T;
   BEGIN
     res := NEW(T, Text.Length(text));
@@ -250,7 +253,7 @@ PROCEDURE FromText(text: TEXT): T RAISES ANY =
     RETURN res;
   END FromText;
 
-PROCEDURE ToText(string: T): TEXT RAISES ANY =
+PROCEDURE ToText(string: T): TEXT =
   BEGIN RETURN Text.FromChars(string^); END ToText;
 
 BEGIN 
