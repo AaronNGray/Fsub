@@ -1,0 +1,15 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+syntax
+  typeBase ::= ...
+    [ "-" type_1 ] :> All(W<:_1) W
+;
+
+Let Ro1 = All(G0) All(A1) -All(G0`<:G0) All(A1`<:A1) -A1;
+
+Let Sigma = All(G0) All(G1) -All(G0`<:G0) All(G1`<:G1) -G0;
+
+(* This will diverge: *)
+do TraceSubtype On;
+judge subtype
+  |- Sigma <: All(G0<:Sigma) All(G1<:Ro1) -Ro1;

@@ -1,0 +1,43 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module RecNat;
+(* Defines:
+	Nat,
+	zero,one,two: Nat,
+	succ,pred: Nat->Nat,
+	add,sub,_+_,_-_: Nat->Nat->Nat
+*)
+
+Let Nat = Rec(N) All(C) C->{N->C}->C;
+
+let zero = 
+  fold(:Nat)(fun(C) fun(z:C) fun(s:Nat->C) z);
+
+let succ =
+  fun(n:Nat) 
+    fold(:Nat)(fun(C) fun(z:C) fun(s:Nat->C) s(n));
+
+let pred =
+  fun(n:Nat)
+    unfold(n)(:Nat)(zero)(fun(p:Nat)p);
+
+let one = succ(zero);
+let two = succ(one);
+
+let add =
+  rec(add:Nat->Nat->Nat)
+    fun(n:Nat) fun(m:Nat)
+      unfold(n)(:Nat)(m)(fun(p:Nat)succ(add(p)(m)));
+
+let sub =
+  rec(sub:Nat->Nat->Nat)
+    fun(n:Nat) fun(m:Nat)
+      unfold(m)(:Nat)(n)(fun(p:Nat)pred(sub(n)(p)));
+
+syntax
+  termOper ::= ... *_1
+    { [ "+" termAppl_2 ] => add(_1)(_2)
+      [ "-" termAppl_2 ] => sub(_1)(_2)
+    };
+

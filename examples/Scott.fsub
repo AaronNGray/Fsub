@@ -1,0 +1,53 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module Scott;
+(* Defines
+	V = V->V
+	\x e		(untyped lambda)
+	e.e		(untyped application)
+	i,k,s,y: V	(the usual combinators)
+*)
+
+Let V = Rec(V) V->V;
+
+syntax
+  termBase ::= ...
+    ["\\" termIde_1 term_2] 
+	=> fold(:V)(fun(_1:V)_2)
+  termOper ::= ... *_1
+    ["." termAppl_2] 
+	=> unfold(_1)(_2);
+
+let i = \x x
+    k = \x \y x
+    s = \x \y \z {x.z}.{y.z}
+    y = \f {\x f.{x.x}}.{\x f.{x.x}}
+;
+
+(* Note: the evaluator is eager; e.g. k.i.{y.i} will diverge.
+   To fix this, use:
+
+module Scott
+import Unit;
+
+Let V = Rec(V) {Unit->V}->V;
+
+syntax
+  termBase ::= ...
+    { ["@" termIde_1]
+	=> _1(unit)
+      ["\\" termIde_1 term_2] 
+	=> fold(:V)(fun(_1:Unit->V)_2) }
+  termOper ::= ... *_1
+    ["." termAppl_2] 
+	=> unfold(_1)(fun(u:Unit)_2);
+
+let i = \x @x;
+let k = \x \y @x;
+let s = \x \y \z {@x.@z}.{@y.@z};
+let y = \f {\x @f.{@x.@x}}.{\x @f.{@x.@x}};
+
+k.i.{y.i};
+
+*)

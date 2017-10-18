@@ -1,0 +1,33 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+(* Ghelli's counterexample *)
+
+syntax
+  typeBase ::= ...
+    [ "-" type_1 ] :> All(V<:_1) V;
+
+syntax
+  typeBase ::= ...
+    [ "#" type_1 ] :> All(W<:_1) -W;
+
+Let U = All(X) -{#X};
+
+(* This will diverge: *)
+do TraceSubtype On;
+
+judge subtype |- U <: #U;
+
+(*
+				|-    U 	<: #U
+	W0<:U 			|-    -{#W0} 	<: -W0
+	W0<:U			|-    W0 	<: #W0
+	W0<:U			|-    U 	<: #W0
+	W0<:U, W1<:W0		|-    -{#W1} 	<: -W1
+	W0<:U, W1<:W0		|-    W1 	<: #W1
+	W0<:U, W1<:W0		|-    W0 	<: #W1
+	W0<:U, W1<:W0		|-    U 	<: #W1
+	W0<:U, W1<:W0, W2<:W1	|-    -{#W2} 	<: -W2
+	...
+*)
+

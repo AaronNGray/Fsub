@@ -1,0 +1,84 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module RecList
+import Bool;
+(* Defines:
+	List(A),
+	nil: All(A?) List(A),
+	cons: All(A?) A->List(A)->List(A),
+	null: All(A?) List(A)->Bool,
+	hd: All(A?) List(A)->A->A,
+	tl: All(A?)List(A)->List(A),
+
+	caseList term
+	  nil() term
+	  cons(ide:type ide:type) term
+	end,
+	list(term ... term)
+*)
+
+syntax
+  typeBase ::= ... 
+    [ "List" "(" type_1 ")" ] 
+      :> Rec(L) All(C) C->{_1->L->C}->C
+;
+
+let nil: All(A?)List(A) =
+  fun(A?) 
+    fold(:List(A))(fun(C)fun(n:C)fun(c:A->List(A)->C)n);
+
+let cons: All(A?)A->List(A)->List(A) =
+  fun(A?)fun(hd:A)fun(tl:List(A))
+    fold(:List(A))(fun(C)fun(n:C)fun(c:A->List(A)->C)c(hd)(tl));
+
+let iterList: All(A?) All(B?) B->{A->B->B}->List(A)->B =
+  fun(A?) fun(B?) fun(n:B) fun(c:A->B->B)
+    rec(iter:List(A)->B)
+      fun(l:List(A)) 
+	unfold(l)(:B)(n)(fun(hd:A)fun(tl:List(A))c(hd)(iter(tl)));
+
+let recList: All(A?) All(B?) B->{A->List(A)->B}->List(A)->B =
+  fun(A?) fun(B?) fun(n:B) fun(c:A->List(A)->B)
+    fun(l:List(A)) unfold(l)(:B)(n)(c);
+
+syntax
+  termBase ::= ...
+    { "nil" => nil
+      "cons" => cons
+      ["caseList" term_1
+	"nil" "(" ")" term_2
+	"cons" "(" termIde_3":"type_4 termIde_5":"type_6 ")" term_7
+	"end"]
+	=> recList(_2)(fun(_3:_4)fun(_5:_6)_7)(_1)
+    };
+
+let null: All(A?)List(A)->Bool =
+  fun(A?)fun(l:List(A))
+    caseList l
+      nil() true
+      cons(hd:A tl:List(A)) false
+    end;
+
+let hd: All(A?)List(A)->A->A =
+  fun(A?)fun(l:List(A))fun(a:A)
+    caseList l
+      nil() a
+      cons(hd:A tl:List(A)) hd
+    end;
+
+let tl: All(A?)List(A)->List(A) =
+  fun(A?)fun(l:List(A))
+    caseList l
+      nil() nil
+      cons(hd:A tl:List(A)) tl
+    end;
+
+syntax
+  termBase ::= ... 
+    [ "list" "(" termList_1 ")" ] => _1
+  termList ::=
+    { [ term_1 termList_2 ] => cons(_1)(_2)
+      [] => nil }
+;
+

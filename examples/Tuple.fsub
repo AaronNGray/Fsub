@@ -1,0 +1,23 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+module Tuple
+import Product;
+(* Defines
+	types: Tuple(type ... type)
+*)
+
+syntax
+  typeBase ::= ... 
+    [ "Tuple" "(" typeTuple_1 ")" ] :> _1
+  typeTuple ::= 
+    { [ type_1 typeTuple_2 ] :> _1 * _2 
+      [] :> Top }
+;
+
+syntax
+  termBase ::= ... 
+    [ "tuple" "(" termTuple_1 ")" ] => _1
+  termTuple ::=
+    { [ term_1 termTuple_2 ] => _1 , _2
+      [] => top }
+;

@@ -1,0 +1,111 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module IndList
+import Bool;
+(* Defines:
+	List(A) = All(L) L->{A->L->L}->L,
+	nil: All(A?) List(A),
+	cons: All(A?) A->List(A)->List(A),
+	null: All(A?) List(A)->Bool,
+	hd: All(A?) List(A)->A->A,
+	tl: All(A?)List(A)->List(A),
+
+	caseList term
+	  nil() term
+	  cons(ide:type ide:type) term
+	end,
+	list(term ... term)
+*)
+
+syntax
+  typeBase ::= ... 
+    [ "List" "(" type_1 ")" ] 
+      :> All(L) L->{_1->L->L}->L
+;
+
+let nil: All(A?)List(A) =
+  fun(A?)fun(L)fun(n:L)fun(c:A->L->L)n;
+
+let cons: All(A?)A->List(A)->List(A) =
+  fun(A?)fun(hd:A)fun(tl:List(A))
+    fun(L)fun(n:L)fun(c:A->L->L)
+      c(hd)(tl(:L)(n)(c));
+
+let iterList: All(A?) All(B?) List(A)->B->{A->B->B}->B =
+  fun(A?) fun(B?) fun(l:List(A)) 
+    fun(n:B) fun(c:A->B->B)
+      l(:B)(n)(c);
+
+syntax
+  termBase ::= ...
+    { "nil" => nil
+      "cons" => cons
+      ["caseList" term_1
+	"nil" "(" ")" term_2
+	"cons" "(" termIde_3":"type_4 termIde_5":"type_6")" term_7
+	"end"]
+	=> iterList(_1)(_2)(fun(_3:_4)fun(_5:_6)_7)
+    }
+;
+
+let null: All(A?)List(A)->Bool =
+  fun(A?)fun(l:List(A))
+    caseList l
+      nil() true
+      cons(hd:A tl:Bool) false
+    end;
+
+let hd: All(A?)List(A)->A->A =
+  fun(A?)fun(l:List(A))fun(a:A)
+    caseList l
+      nil() a
+      cons(hd:A tl:A) hd
+    end;
+
+let tl: All(A?)List(A)->List(A) =
+  fun(A?)fun(l:List(A))
+    caseList l
+      nil() nil
+      cons(hd:A tl:List(A)) tl
+    end;
+
+syntax
+  termBase ::= ... 
+    [ "list" "(" termList_1 ")" ] => _1
+  termList ::=
+    { [ term_1 termList_2 ] => cons(_1)(_2)
+      [] => nil }
+;
+
+
+(* *** No-inference version:
+
+let nil: AnyList =
+  fun(A)fun(L)fun(n:L)fun(c:A->L->L)n;
+
+let cons: All(A)A->List(A)->List(A) =
+  fun(A)fun(hd:A)fun(tl:List(A))
+    fun(L)fun(n:L)fun(c:A->L->L)
+      c(hd)(tl(:L)(n)(c));
+
+syntax
+  termBase ::= ...
+    { ["nil"] => nil
+      ["cons"] => cons
+      ["caseList" term_1 ":" "List" "(" type_2 ")" "giving" type_3
+	"nil" "(" ")" term_4
+	"cons" "(" termIde_5 termIde_6 ")" term_7
+	"end"]
+	=> _1(:_3)(_4)(fun(_5:_2)fun(_6:_3)_7)
+    }
+;
+
+let null: All(A)List(A)->Bool =
+  fun(A)fun(l:List(A))
+    caseList l:List(A) giving Bool
+    nil() true
+    cons(hd tl) false
+    end;
+
+*** *)

@@ -1,0 +1,58 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module Some;
+(* Defines
+	Some(ide)type, Some(ide<:type)type
+	pack ide<:type=type as type with term end
+	open term as ide<:type ide:type in term end
+*)
+
+(* easy version:
+syntax
+  typeBase ::= ...
+    [ "Some" "(" typeIde_1 "<:" type_2 ")" type_3 ]
+      :> All(V?) {All(_1<:_2) _3 -> V} -> V
+;
+*)
+
+(* some interesting pattern-variable manipulation: *)
+syntax
+  typeBase ::= ...
+    [ "Some" "(" typeIde_1 
+      { ["<:" type_2 ")" type_3 ] 
+	  :> All(V?) {All(_1<:_2) _3 -> V} -> V
+        [")" type_3 ]
+	  :> All(V?) {All(_1) _3 -> V} -> V
+      } _4
+    ] :> _4
+;
+
+syntax
+  termBase ::= ...
+    { [ "pack" typeIde_1 "<:" type_2 "=" type_3 "as" type_4  
+        "with" term_5 "end" ] 
+          => fun(V?) fun(f:All(_1<:_2)_4->V) f(:_3)(_5)
+      [ "open" term_1 "as" typeIde_2 "<:" type_3 termIde_4 ":" type_5
+        "in" term_6 "end" ]
+          => _1(fun(_2<:_3)fun(_4:_5)_6)}
+;
+
+
+(* Example:
+
+  load Bool; load Product;
+
+  Let Spec = Some(X<:Bool) X*{X->Bool};
+
+  let impl: Spec =
+    pack X<:Bool=True as X*{X->Bool} 
+    with tt, fun(x:True)true end;
+
+  open impl as X<:Bool p:X*{X->Bool}
+  in snd(p)(fst(p)) end;
+
+Note: trying to extract fst(p) rightfully 
+causes a type-inference rank-check.
+*)
+

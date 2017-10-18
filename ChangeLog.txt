@@ -1,0 +1,42 @@
+CHANGE LOG
+
+Version 1.0: 
+
+	First public version
+
+Version 1.1:
+
+	Removed ad-hoc restriction on pattern instantiation.
+
+Version 1.2:
+
+	Added recursion.
+
+Version 1.3:
+
+	Fixed a mistake in the algorithm's rules and code.
+	( judge term A<:Top F<:A->A a:A f:F |- f(a):A; would fail.)
+
+Version 1.4:
+
+	Ported to Modula-3 v.2.0.
+
+	Fixed several mistakes in the typing and operational semantics rules (thanks to Georges Gonthier), 
+	although the program code was correct.
+
+	Fixed a mistake in the rules and operational semantics of fold (thanks to Mario Coppo and 
+	Mariangiola Dezani). The program is unchanged; an expression fold(:Y)(a) where the 
+	environment contains Y<:Y1, Y1<:Y2, ..., Yn<:Rec(X)B is now seen as an abbreviation for 
+	fold(:Rec(X)B)(a).
+
+Version 1.5:
+
+	Found a problem with free variables in actions (thanks to Florian Matthes).
+	(let t = top; syntax term ::= ... ¬T¬ => t; fun(t:Top)T; captured t.)
+	Note that the mechanism described in Section 3.4 is not involved in this situation.
+	This situations is now reported as an error; existing examples were not affected.
+
+	Added a command to activate the subtyping rule for bounded quantifiers proposed by Giuseppe
+	Castagna:
+		E |- AÕ<:A   E,X<:Top |- B<:BÕ   
+		=>    E |- All(X<:A)B <: All(X<:AÕ)BÕ

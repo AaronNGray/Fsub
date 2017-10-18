@@ -1,0 +1,8 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module Id;
+
+Let Id = All(X?) X->X;
+
+let id: Id = fun(X?) fun(x:X) x;

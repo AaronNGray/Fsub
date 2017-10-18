@@ -1,0 +1,31 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module Product;
+(* Defines
+	: A*B = All(C){A->B->C}->C
+	_,_: All(A?) All(B?) A->B->A*B
+	pair: All(A?) All(B?) A->B->A*B
+	fst: All(A?) All(B?) A*B->A
+	snd: All(A?) All(B?) A*B->B
+*)
+
+syntax
+  typeOper ::= ... *_1 
+    [ "*" typeOper_2 ] 
+      :> All(C) {_1->_2->C}->C
+;
+
+let pair: All(A?) All(B?) A->B->A*B = 
+  fun(A?) fun(B?) fun(a:A) fun(b:B)
+    fun(C) fun(p:A->B->C) p(a)(b);
+
+let fst: All(A?) All(B?) A*B->A =
+    fun(A?) fun(B?) fun(p:A*B) p(:A)(fun(a:A)fun(b:B)a);
+let snd: All(A?) All(B?) A*B->B =
+    fun(A?) fun(B?) fun(p:A*B) p(:B)(fun(a:A)fun(b:B)b);
+
+syntax
+  termOper ::= ... *_1
+    [ "," termOper_2 ]
+      => pair(_1)(_2);

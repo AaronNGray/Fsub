@@ -1,0 +1,12 @@
+
+module (Check)
+module (Frame)
+module (Eval)
+module (Scope)
+module (Value)
+module (Tree)
+implementation (Act)
+implementation (Main)
+
+M3FLAGS = -w1 -make -why
+program (Fsub)

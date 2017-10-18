@@ -1,0 +1,43 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module Sum;
+(* Defines
+	: A+B = All(C){A->C}->{B->C}->C
+	inl: All(A?) All(B?) A->A+B
+	inr: All(A?) All(B?) B->A+B
+	sum: All(A?) All(B?) All(C?) A+B->{A->C}->{B->C}->C
+	case term
+	  inl(ide:type) term
+	  inr(ide:type) term
+	end,
+*)
+
+syntax
+  typeOper ::= ... *_1 
+    [ "+" typeOper_2 ] 
+      :> All(C) {_1->C}->{_2->C}->C
+;
+
+let inl: All(A?) All(B?) A->A+B =
+  fun(A?) fun(B?) fun(a:A)
+    fun(C) fun(f:A->C) fun(g:B->C) f(a);
+let inr: All(A?) All(B?) B->A+B =
+  fun(A?) fun(B?) fun(b:B)
+    fun(C) fun(f:A->C) fun(g:B->C) g(b);
+
+let sum: All(A?) All(B?) All(C?) A+B->{A->C}->{B->C}->C =
+  fun(A?) fun(B?) fun(C?)
+    fun(s:A+B) fun(f:A->C) fun(g:B->C)
+      s(:C)(f)(g);
+
+syntax
+  termBase ::= ...
+      ["case" term_1
+	"lft" "(" termIde_2 ":" type_3 ")" term_4
+	"rht" "(" termIde_5 ":" type_6 ")" term_7
+	"end"]
+	=> sum(_1)(fun(_2:_3)_4)(fun(_5:_6)_7)
+;
+
+

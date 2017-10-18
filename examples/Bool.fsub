@@ -1,0 +1,55 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+module Bool;
+(* Defines
+	Bool = All(X)X->X->X
+	True, False <: Bool
+	true: True; false: False
+	not: Bool->Bool
+	and, or, _\/_, _/\_: Bool->Bool->Bool
+	if _ then _ else _ end
+*)
+
+Let Bool = All(X) X->X->X
+    True = All(X) X->Top->X
+    False = All(X) Top->X->X;
+
+let true: Bool = fun(X) fun(x:X) fun(y:X) x
+    false: Bool = fun(X) fun(x:X) fun(y:X) y;
+
+let tt: True = fun(X) fun(x:X) fun(y:Top) x
+    ff: False = fun(X) fun(x:Top) fun(y:X) y;
+
+let cond = fun(X?) fun(b:Bool) b(:X);
+    
+
+(* Bool, true, and false are turned into keywords *)
+syntax
+  typeBase ::= ... 
+    ["Bool"] :> Bool
+
+  termBase ::= ...
+    { ["true"] => true
+      ["false"] => false
+      ["if" term_1 "then" term_2 "else" term_3 "end" ]
+        => cond(_1)(_2)(_3)
+    };
+
+let not: Bool->Bool =
+      fun(x:Bool) if x then false else true end
+    and: Bool->Bool->Bool =
+      fun(x:Bool) fun(y:Bool)
+	if x then y else false end
+    or:Bool->Bool->Bool =
+      fun(x:Bool) fun(y:Bool)
+	if x then true else y end;
+
+syntax
+  termOper ::= ... *_1
+    { [ "/\\" termAppl_2 ] => and(_1)(_2)
+      [ "\\/" termAppl_2 ] => or(_1)(_2)
+    };
+
+
+
+

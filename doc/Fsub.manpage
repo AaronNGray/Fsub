@@ -1,0 +1,43 @@
+
+
+NAME
+    Fsub - a Modula-3 implementation of the F<: calculus
+
+USAGE
+    Fsub
+OR
+    cd <...>/fsub/examples; Fsub
+
+DESCRIPTION
+
+    Fsub is a Modula-3 [3] implementation of the F<: calculus [1],[2],[4].
+    The type structure consists of type variables, "Top", function spaces, 
+    bounded quantification, and recursive types. The implementation supports 
+    type inference ("argument synthesis"), a simple modularization mechanism, 
+    and the introduction of arbitrary notation on-the-fly.
+        
+    There are no shell-line parameters. A local file called
+    "Startup.fsub", if found, is loaded at startup.
+    
+REFERENCES
+
+    [1] L.Cardelli, J.C.Mitchell, S.Martini, A.Scedrov: "An extension
+        of system F with subtyping", Proc. TACS'91 & SRC Report #80.
+    [2] P.-L.Curien, G.Ghelli: "Subyping + extensionaliy: confluence
+        of beta-eta reductions in F<=", Proc. TACS'91.
+    [3] G.Nelson(ed.): Systems Programming in Modula-3. 
+        Prentice Hall, ISBN 0-13-590464-1, 1991.
+    [4] B.C.Pierce: Bounded quantification is undecidable, Proc POPL'92.
+
+AUTHOR
+     Luca Cardelli (luca@src.dec.com)
+
+DOCUMENTATION
+    Hard copies of the manual can be obtained from:
+    
+    	Luca Cardelli
+    	DEC SRC
+    	130 Lytton Ave
+    	Palo Alto CA 94301
+    	USA
+    

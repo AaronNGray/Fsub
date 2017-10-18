@@ -1,0 +1,13 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+module Unit;
+(* Defines
+	Unit
+	unit: Unit
+*)
+
+Let Unit = All(X) X->X;
+
+let unit:Unit = fun(X) fun(x:X) x;
+
